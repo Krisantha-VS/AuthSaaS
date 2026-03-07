@@ -1,5 +1,10 @@
+import type { Metadata } from 'next';
 import { DocsSidebar } from '@/components/docs/sidebar';
 import { DocsHeader } from '@/components/docs/header';
+
+export const metadata: Metadata = {
+  title: { default: 'Docs', template: '%s · AuthSaas Docs' },
+};
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
