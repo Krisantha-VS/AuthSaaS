@@ -2,13 +2,18 @@ import { PageHeader, SectionHeading, SubHeading, Callout, OnThisPage } from '@/c
 import { CodeBlock } from '@/components/docs/code-block';
 
 const toc = [
-  { id: 'token-lifecycle',  title: 'Token lifecycle' },
-  { id: 'rotation',         title: 'Refresh token rotation' },
-  { id: 'reuse-detection',  title: 'Reuse detection' },
-  { id: 'storage',          title: 'Token storage' },
-  { id: 'passwords',        title: 'Password hashing' },
-  { id: 'audit-log',        title: 'Audit log' },
-  { id: 'best-practices',   title: 'Best practices' },
+  { id: 'token-lifecycle',     title: 'Token lifecycle' },
+  { id: 'rotation',            title: 'Refresh token rotation' },
+  { id: 'reuse-detection',     title: 'Reuse detection' },
+  { id: 'storage',             title: 'Token storage' },
+  { id: 'passwords',           title: 'Password hashing' },
+  { id: 'audit-log',           title: 'Audit log' },
+  { id: 'best-practices',      title: 'Best practices' },
+  { id: 'email-verification',  title: 'Email verification' },
+  { id: 'rate-limiting',       title: 'Rate limiting' },
+  { id: 'cors',                title: 'CORS enforcement' },
+  { id: 'password-policy',     title: 'Password policy' },
+  { id: 'security-headers',    title: 'Security headers' },
 ];
 
 export default function SecurityPage() {
@@ -118,6 +123,83 @@ const hash = await bcrypt.hash(password, 12); // ~400ms per hash`} />
           Never send tokens over plain HTTP. All AuthSaas endpoints enforce HTTPS in production.
           Your app should do the same.
         </p>
+
+        <SubHeading id="bp-alg">JWT algorithm pinning</SubHeading>
+        <p>
+          AuthSaas explicitly pins <strong>HS256</strong> on both sign and verify — rejecting tokens
+          with <code>alg: none</code> or any other algorithm.
+        </p>
+
+        <SectionHeading id="email-verification">Email verification</SectionHeading>
+        <p>
+          Verification tokens are generated with <code>crypto.randomBytes(32)</code> — 256 bits of
+          entropy. Only the <strong>SHA-256 hash</strong> of the token is stored in the database;
+          the raw token is never persisted. This means a database breach cannot be used to craft
+          valid verification links.
+        </p>
+        <ul>
+          <li>Links expire in <strong>24 hours</strong></li>
+          <li>Resend is rate-limited to <strong>3 requests per 15 minutes per IP</strong></li>
+        </ul>
+
+        <SectionHeading id="rate-limiting">Rate limiting</SectionHeading>
+        <p>AuthSaas enforces per-IP rate limits on sensitive auth endpoints:</p>
+        <ul>
+          <li><strong>Login</strong> — 10 attempts per 15 minutes per IP. Exceeding the limit returns 429 with a <code>Retry-After</code> header.</li>
+          <li><strong>Register</strong> — 5 attempts per hour per IP.</li>
+          <li><strong>Resend verification</strong> — 3 per 15 minutes per IP.</li>
+        </ul>
+        <CodeBlock lang="json" code={`// 429 response body
+{
+  "success": false,
+  "error": "Too many login attempts. Try again later.",
+  "code": "RATE_LIMITED"
+}
+
+// 429 response headers
+Retry-After: 847`} />
+        <Callout variant="note">
+          The current implementation is per-instance (in-process memory). For distributed or serverless
+          deployments, upgrade to Upstash Redis for accurate cross-instance rate limiting.
+        </Callout>
+
+        <SectionHeading id="cors">CORS enforcement</SectionHeading>
+        <p>
+          All <code>/auth/login</code> and <code>/auth/register</code> requests that include an{' '}
+          <code>Origin</code> header are validated against the app&apos;s <code>allowedOrigins</code>{' '}
+          list. Requests without an <code>Origin</code> header (server-side SDK calls) are always
+          allowed through without origin validation.
+        </p>
+        <ul>
+          <li>Preflight <code>OPTIONS</code> requests are handled automatically.</li>
+          <li>CORS headers are only set when the origin is whitelisted — there is no wildcard <code>*</code> fallback.</li>
+        </ul>
+        <Callout variant="warning">
+          Always set <code>allowedOrigins</code> to your exact production domains.{' '}
+          <code>localhost</code> is fine for development.
+        </Callout>
+
+        <SectionHeading id="password-policy">Password policy</SectionHeading>
+        <p>Passwords must satisfy all four rules:</p>
+        <ul>
+          <li>Minimum <strong>8 characters</strong>, maximum <strong>128 characters</strong></li>
+          <li>At least one <strong>uppercase letter</strong> (A–Z)</li>
+          <li>At least one <strong>number</strong> (0–9)</li>
+          <li>At least one <strong>special character</strong> (!@#$%…)</li>
+        </ul>
+        <CodeBlock lang="typescript" code={`const passwordSchema = z.string()
+  .min(8).max(128)
+  .regex(/[A-Z]/, 'Needs uppercase')
+  .regex(/[0-9]/, 'Needs a number')
+  .regex(/[^A-Za-z0-9]/, 'Needs a special character');`} />
+
+        <SectionHeading id="security-headers">Security headers</SectionHeading>
+        <p>AuthSaas sets the following headers on every response:</p>
+        <CodeBlock lang="text" code={`Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()`} />
       </div>
 
       <OnThisPage items={toc} />

@@ -20,14 +20,18 @@ export const docsNav: NavSection[] = [
   {
     title: 'Core Concepts',
     items: [
-      { title: 'Overview',      href: '/docs/concepts' },
+      { title: 'Overview',            href: '/docs/concepts' },
+      { title: 'RBAC & Permissions',  href: '/docs/rbac', badge: 'new' as const },
     ],
   },
   {
     title: 'API Reference',
     items: [
-      { title: 'Authentication', href: '/docs/api-reference' },
-      { title: 'Tenant',         href: '/docs/api-reference#tenant', },
+      { title: 'Authentication',    href: '/docs/api-reference' },
+      { title: 'Tenant',            href: '/docs/api-reference#tenant' },
+      { title: 'Email Verification', href: '/docs/api-reference#auth-verify' },
+      { title: 'User Management',   href: '/docs/api-reference#users' },
+      { title: 'Role Management',   href: '/docs/api-reference#roles' },
     ],
   },
   {
