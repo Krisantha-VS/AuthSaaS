@@ -36,6 +36,17 @@ export const tenantLoginSchema = z.object({
   password: z.string().min(1),
 });
 
+export const forgotPasswordSchema = z.object({
+  clientId: z.string().min(1),
+  email: z.string().email(),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  email: z.string().email(),
+  password: passwordSchema,
+});
+
 export const createAppSchema = z.object({
   name: z.string().min(2).max(100),
   description: z.string().max(300).optional(),

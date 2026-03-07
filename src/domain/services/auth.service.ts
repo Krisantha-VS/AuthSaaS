@@ -6,7 +6,7 @@ import { RefreshTokenRepository } from '@/infrastructure/db/repositories/refresh
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
 import { sendMail } from '@/infrastructure/email/mailer';
-import { verificationEmail } from '@/infrastructure/email/templates';
+import { verificationEmail, passwordResetEmail } from '@/infrastructure/email/templates';
 import { config } from '@/shared/config';
 import type { AuthTokens } from '@/shared/types';
 import { assignRole } from '@/domain/services/rbac.service';
@@ -160,6 +160,45 @@ export async function verifyEmail(params: { token: string; email: string }) {
   if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
 
   await userRepo.update(user.id, { emailVerified: true, verifyToken: null } as any);
+}
+
+export async function forgotPassword(params: {
+  clientId: string;
+  email: string;
+}) {
+  const app = await tenantAppRepo.findByClientId(params.clientId);
+  if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
+
+  // Always respond with success — never reveal whether the email exists
+  const user = await userRepo.findByEmail(app.id, params.email);
+  if (!user || !user.isActive) return;
+
+  const resetTokenRaw = crypto.randomBytes(32).toString('hex');
+  const resetToken = hashToken(resetTokenRaw);
+  const resetTokenExp = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await userRepo.update(user.id, { resetToken, resetTokenExp } as any);
+
+  const resetUrl = `${config.app.url}/reset-password?token=${resetTokenRaw}&email=${encodeURIComponent(params.email)}`;
+  const { subject, html } = passwordResetEmail({ name: user.name ?? null, resetUrl });
+  await sendMail(params.email, subject, html);
+}
+
+export async function resetPassword(params: {
+  token: string;
+  email: string;
+  password: string;
+}) {
+  const tokenHash = hashToken(params.token);
+  const user = await (userRepo as any).findByResetToken(tokenHash);
+  if (!user) throw new Error('INVALID_TOKEN');
+  if ((user as any).resetTokenExp < new Date()) throw new Error('TOKEN_EXPIRED');
+
+  const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
+  await userRepo.update(user.id, { passwordHash, resetToken: null, resetTokenExp: null } as any);
+
+  // Invalidate all sessions after password reset
+  await refreshTokenRepo.deleteAllForUser(user.id);
 }
 
 export async function resendVerification(params: {
