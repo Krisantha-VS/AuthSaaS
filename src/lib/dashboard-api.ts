@@ -1,4 +1,5 @@
 const BASE = '/api/v1/tenant';
+const RBAC_BASE = '/api/v1';
 
 async function request<T>(
   path: string,
@@ -155,7 +156,7 @@ export interface RoleWithPermissions {
 // ─── User Management ─────────────────────────────────────────────────────────
 
 export async function getUsers(token: string, appId: string): Promise<UserWithRoles[]> {
-  const res = await fetch(`${BASE}/users?appId=${appId}`, {
+  const res = await fetch(`${RBAC_BASE}/users?appId=${appId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();
@@ -164,7 +165,7 @@ export async function getUsers(token: string, appId: string): Promise<UserWithRo
 }
 
 export async function updateUserRoles(token: string, userId: string, appId: string, roles: string[]): Promise<void> {
-  const res = await fetch(`${BASE}/users/${userId}/roles`, {
+  const res = await fetch(`${RBAC_BASE}/users/${userId}/roles`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ appId, roles }),
@@ -174,7 +175,7 @@ export async function updateUserRoles(token: string, userId: string, appId: stri
 }
 
 export async function toggleUserStatus(token: string, userId: string, appId: string): Promise<UserWithRoles> {
-  const res = await fetch(`${BASE}/users/${userId}`, {
+  const res = await fetch(`${RBAC_BASE}/users/${userId}`, {
     method: 'PATCH',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ appId }),
@@ -187,7 +188,7 @@ export async function toggleUserStatus(token: string, userId: string, appId: str
 // ─── Role Management ─────────────────────────────────────────────────────────
 
 export async function getRoles(token: string, appId: string): Promise<RoleWithPermissions[]> {
-  const res = await fetch(`${BASE}/roles?appId=${appId}`, {
+  const res = await fetch(`${RBAC_BASE}/roles?appId=${appId}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();
@@ -200,7 +201,7 @@ export async function createRole(
   appId: string,
   data: { name: string; description?: string; permissions?: string[] },
 ): Promise<void> {
-  const res = await fetch(`${BASE}/roles`, {
+  const res = await fetch(`${RBAC_BASE}/roles`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ appId, ...data }),
@@ -215,7 +216,7 @@ export async function updateRolePermissions(
   appId: string,
   permissions: string[],
 ): Promise<void> {
-  const res = await fetch(`${BASE}/roles/${roleId}/permissions`, {
+  const res = await fetch(`${RBAC_BASE}/roles/${roleId}/permissions`, {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ appId, permissions }),
