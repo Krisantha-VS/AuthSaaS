@@ -13,9 +13,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AuthSaas — Multi-tenant Authentication as a Service",
+  title: {
+    default: "AuthSaas — Multi-tenant Authentication",
+    template: "%s · AuthSaas",
+  },
   description:
     "Enterprise-grade auth service with JWT rotation, RBAC, audit logging, and SDKs for JS and C#.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

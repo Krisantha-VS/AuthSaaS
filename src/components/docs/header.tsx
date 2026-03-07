@@ -1,38 +1,97 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 
+/* ── AuthSaas logo mark — inline SVG, no external deps ─────────────────── */
+function LogoMark({ size = 28 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 32 32"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="lm-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#4f46e5" />
+          <stop offset="0.5" stopColor="#7c3aed" />
+          <stop offset="1" stopColor="#9333ea" />
+        </linearGradient>
+        <linearGradient id="lm-kh" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#4f46e5" />
+          <stop offset="1" stopColor="#9333ea" />
+        </linearGradient>
+      </defs>
+      {/* Squircle background */}
+      <rect width="32" height="32" rx="8" fill="url(#lm-bg)" />
+      {/* Shackle */}
+      <path
+        d="M10 15v-3.5a6 6 0 0 1 12 0V15"
+        stroke="white"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Lock body */}
+      <rect x="7.5" y="14" width="17" height="12" rx="3.5" fill="white" />
+      {/* Keyhole circle */}
+      <circle cx="16" cy="19.5" r="2.2" fill="url(#lm-kh)" />
+      {/* Keyhole stem */}
+      <rect x="15.1" y="20.5" width="1.8" height="3" rx="0.9" fill="url(#lm-kh)" />
+    </svg>
+  );
+}
+
+/* ── Full horizontal wordmark ────────────────────────────────────────────── */
+export function AuthSaasLogo({ size = 28 }: { size?: number }) {
+  return (
+    <span className="flex items-center gap-2.5 select-none">
+      <LogoMark size={size} />
+      <span className="flex items-baseline gap-0">
+        <span
+          style={{ fontSize: size * 0.57, letterSpacing: '-0.02em' }}
+          className="font-bold text-foreground"
+        >
+          Auth
+        </span>
+        <span
+          style={{ fontSize: size * 0.57, letterSpacing: '-0.02em' }}
+          className="font-bold bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 bg-clip-text text-transparent"
+        >
+          Saas
+        </span>
+      </span>
+    </span>
+  );
+}
+
+/* ── Docs header ─────────────────────────────────────────────────────────── */
 export function DocsHeader() {
-  const [open, setOpen] = useState(false);
-
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-sm">
       <div className="max-w-[1400px] mx-auto flex items-center justify-between h-14 px-6">
+
         {/* Logo */}
-        <Link href="/docs/introduction" className="flex items-center gap-2.5 font-semibold text-sm">
-          <span className="flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-violet-500 to-pink-500 text-white text-xs font-bold">
-            A
-          </span>
-          <span>AuthSaas</span>
-          <span className="text-muted-foreground font-normal">Docs</span>
+        <Link href="/docs/introduction" className="hover:opacity-80 transition-opacity">
+          <AuthSaasLogo size={30} />
         </Link>
 
         {/* Center nav */}
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/docs/introduction"   className="hover:text-foreground transition-colors">Docs</Link>
-          <Link href="/docs/api-reference"  className="hover:text-foreground transition-colors">API</Link>
-          <Link href="/docs/sdk-js"         className="hover:text-foreground transition-colors">SDKs</Link>
-          <Link href="/"                    className="hover:text-foreground transition-colors">Dashboard</Link>
+          <Link href="/docs/introduction"  className="hover:text-foreground transition-colors">Docs</Link>
+          <Link href="/docs/api-reference" className="hover:text-foreground transition-colors">API</Link>
+          <Link href="/docs/sdk-js"        className="hover:text-foreground transition-colors">SDKs</Link>
         </nav>
 
         {/* Right */}
         <div className="flex items-center gap-3">
-          <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">
-            v1
+          <span className="hidden sm:inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-violet-500/10 text-violet-400 border border-violet-500/20">
+            v1 · Beta
           </span>
           <a
-            href="https://github.com"
+            href="https://github.com/Krisantha-VS/AuthSaaS"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-foreground transition-colors"
@@ -43,6 +102,7 @@ export function DocsHeader() {
             </svg>
           </a>
         </div>
+
       </div>
     </header>
   );
