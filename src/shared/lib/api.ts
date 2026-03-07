@@ -25,6 +25,8 @@ const ERROR_MAP: Record<string, { status: number; message: string }> = {
   USER_NOT_FOUND:      { status: 404, message: 'User not found' },
   NOT_FOUND:           { status: 404, message: 'Resource not found' },
   UNAUTHORIZED:        { status: 401, message: 'Unauthorized' },
+  ALREADY_VERIFIED:    { status: 409, message: 'Email already verified' },
+  EMAIL_NOT_VERIFIED:  { status: 403, message: 'Email not verified. Check your inbox.' },
 };
 
 export function handleError(e: unknown) {
