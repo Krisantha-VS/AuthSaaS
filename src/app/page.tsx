@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
-
+// Root redirect is handled in next.config.ts
+// This page should never be reached.
 export default function Home() {
-  redirect('/docs/introduction');
+  return null;
 }
