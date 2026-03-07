@@ -1,18 +1,17 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
 import { TenantRepository } from '@/infrastructure/db/repositories/tenant.repository';
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
-import { signAccessToken, signRefreshToken } from '@/infrastructure/jwt';
-import { RefreshTokenRepository } from '@/infrastructure/db/repositories/refresh-token.repository';
+import { config } from '@/shared/config';
 
 const tenantRepo = new TenantRepository();
 const appRepo = new TenantAppRepository();
 const auditRepo = new AuditLogRepository();
-const refreshTokenRepo = new RefreshTokenRepository();
 
 const SALT_ROUNDS = 12;
-const REFRESH_TOKEN_TTL_DAYS = 7;
+const TENANT_TOKEN_TTL_SECONDS = 24 * 60 * 60; // 24 h — no server-side refresh needed (localStorage session)
 
 function generateSecret(): { plain: string; hash: string } {
   const plain = `sas_${crypto.randomBytes(32).toString('hex')}`;
@@ -20,13 +19,13 @@ function generateSecret(): { plain: string; hash: string } {
   return { plain, hash };
 }
 
-async function issueTenantTokens(tenantId: string, email: string) {
-  const accessToken = signAccessToken({ sub: tenantId, appId: 'dashboard', email, roles: ['tenant'] });
-  const refreshToken = signRefreshToken(tenantId);
-  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
-  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
-  await refreshTokenRepo.create({ tokenHash, userId: tenantId, appId: 'dashboard', expiresAt });
-  return { accessToken, refreshToken, expiresIn: 15 * 60 };
+function issueTenantTokens(tenantId: string, email: string) {
+  const accessToken = jwt.sign(
+    { sub: tenantId, appId: 'dashboard', email, roles: ['tenant'] },
+    config.jwt.accessSecret,
+    { expiresIn: TENANT_TOKEN_TTL_SECONDS },
+  );
+  return { accessToken, refreshToken: '', expiresIn: TENANT_TOKEN_TTL_SECONDS };
 }
 
 // ─── Tenant Register / Login ─────────────────────────────
@@ -45,7 +44,7 @@ export async function registerTenant(params: {
 
   await auditRepo.create({ tenantId: tenant.id, action: 'tenant_register', resource: 'tenant', ipAddress: params.ipAddress });
 
-  const tokens = await issueTenantTokens(tenant.id, tenant.email);
+  const tokens = issueTenantTokens(tenant.id, tenant.email);
   return { tenant, tokens };
 }
 
@@ -62,7 +61,7 @@ export async function loginTenant(params: {
 
   await auditRepo.create({ tenantId: record.id, action: 'tenant_login', resource: 'tenant', ipAddress: params.ipAddress });
 
-  const tokens = await issueTenantTokens(record.id, record.email);
+  const tokens = issueTenantTokens(record.id, record.email);
   return { tenant: { id: record.id, name: record.name, email: record.email }, tokens };
 }
 
