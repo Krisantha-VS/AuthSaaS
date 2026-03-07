@@ -15,5 +15,5 @@ export function requireAuth(req: Request): { payload: JwtPayload } | ReturnType<
 }
 
 export function isTenantAuth(result: ReturnType<typeof requireAuth>): result is { payload: JwtPayload } {
-  return 'payload' in result;
+  return 'payload' in result && Array.isArray((result as any).payload.roles) && (result as any).payload.roles.includes('tenant');
 }

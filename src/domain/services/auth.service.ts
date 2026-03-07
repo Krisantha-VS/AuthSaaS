@@ -44,7 +44,9 @@ export async function register(params: {
   if (existing) throw new Error('EMAIL_TAKEN');
 
   const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
-  const verifyToken = crypto.randomBytes(32).toString('hex');
+  const verifyTokenRaw = crypto.randomBytes(32).toString('hex');
+  // Store only the hash — raw token is returned to caller for email delivery
+  const verifyToken = crypto.createHash('sha256').update(verifyTokenRaw).digest('hex');
 
   const user = await userRepo.create({
     appId: app.id,
@@ -53,7 +55,6 @@ export async function register(params: {
     name: params.name,
   });
 
-  // Store verify token
   await userRepo.update(user.id, { verifyToken } as any);
 
   await auditRepo.create({
@@ -65,7 +66,7 @@ export async function register(params: {
   });
 
   const tokens = await issueTokens(user.id, app.id, user.email, user.roles);
-  return { user, tokens, verifyToken };
+  return { user, tokens, verifyToken: verifyTokenRaw }; // raw token for email, hash stored in DB
 }
 
 export async function login(params: {
@@ -102,7 +103,11 @@ export async function refresh(params: { refreshToken: string; ipAddress?: string
   const stored = await refreshTokenRepo.findByHash(tokenHash);
 
   if (!stored) throw new Error('INVALID_TOKEN');
-  if (stored.usedAt) throw new Error('TOKEN_REUSE'); // Rotation violation
+  if (stored.usedAt) {
+    // Attacker may have the newer token family — nuke ALL sessions for this user
+    await refreshTokenRepo.deleteAllForUser(stored.userId);
+    throw new Error('TOKEN_REUSE');
+  }
   if (stored.expiresAt < new Date()) throw new Error('TOKEN_EXPIRED');
 
   // Verify JWT signature

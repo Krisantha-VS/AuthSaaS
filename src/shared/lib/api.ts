@@ -5,8 +5,13 @@ export function ok<T>(data: T, status = 200): NextResponse<ApiResponse<T>> {
   return NextResponse.json({ success: true, data }, { status });
 }
 
-export function err(error: string, code: string, status = 400): NextResponse<ApiResponse<never>> {
-  return NextResponse.json({ success: false, error, code }, { status });
+export function err(
+  error: string,
+  code: string,
+  status = 400,
+  extraHeaders?: Record<string, string>,
+): NextResponse<ApiResponse<never>> {
+  return NextResponse.json({ success: false, error, code }, { status, headers: extraHeaders });
 }
 
 const ERROR_MAP: Record<string, { status: number; message: string }> = {
