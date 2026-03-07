@@ -6,27 +6,29 @@ import Link from 'next/link';
 import { useDashboardAuth } from '@/components/dashboard/provider';
 import { createApp } from '@/lib/dashboard-api';
 import { CopyBtn } from '@/components/dashboard/copy-btn';
+import { useToast } from '@/components/dashboard/toast';
 
 export default function NewAppPage() {
   const { token }                   = useDashboardAuth();
+  const { toast }                   = useToast();
   const router                      = useRouter();
   const [name, setName]             = useState('');
   const [desc, setDesc]             = useState('');
   const [origins, setOrigins]       = useState('');
-  const [error, setError]           = useState('');
   const [loading, setLoading]       = useState(false);
   const [secret, setSecret]         = useState<{ clientId: string; clientSecret: string } | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!token) return;
-    setLoading(true); setError('');
+    setLoading(true);
     try {
       const allowedOrigins = origins.split(',').map(s => s.trim()).filter(Boolean);
       const result = await createApp(token, { name: name.trim(), description: desc.trim() || undefined, allowedOrigins });
       setSecret({ clientId: result.app.clientId, clientSecret: result.clientSecret });
+      toast({ message: 'Application created', type: 'success' });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create app');
+      toast({ message: err instanceof Error ? err.message : 'Failed to create app', type: 'error' });
     } finally {
       setLoading(false);
     }
@@ -152,15 +154,6 @@ await client.login({ email, password });`}
             />
             <p className="text-xs text-zinc-600 mt-1.5">Leave empty to allow all origins during development.</p>
           </div>
-
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-              <svg className="w-4 h-4 text-red-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>
-              </svg>
-              <p className="text-xs text-red-400">{error}</p>
-            </div>
-          )}
 
           <div className="flex items-center gap-3 pt-2">
             <button

@@ -6,9 +6,11 @@ import { useParams } from 'next/navigation';
 import { useDashboardAuth } from '@/components/dashboard/provider';
 import { getApp, rotateSecret, updateApp, type TenantApp } from '@/lib/dashboard-api';
 import { CopyBtn } from '@/components/dashboard/copy-btn';
+import { useToast } from '@/components/dashboard/toast';
 
 export default function AppDetailPage() {
   const { token }                   = useDashboardAuth();
+  const { toast }                   = useToast();
   const { appId }                   = useParams<{ appId: string }>();
   const [app, setApp]               = useState<TenantApp | null>(null);
   const [loading, setLoading]       = useState(true);
@@ -36,6 +38,9 @@ export default function AppDetailPage() {
       const { clientSecret } = await rotateSecret(token, appId);
       setNewSecret(clientSecret);
       setConfirmRotate(false);
+      toast({ message: 'Secret rotated — save it now', type: 'warning' });
+    } catch {
+      toast({ message: 'Something went wrong', type: 'error' });
     } finally { setRotating(false); }
   };
 
@@ -49,13 +54,21 @@ export default function AppDetailPage() {
         allowedOrigins: origins.split(',').map(s => s.trim()).filter(Boolean),
       });
       setApp(updated);
+      toast({ message: 'Changes saved', type: 'success' });
+    } catch {
+      toast({ message: 'Something went wrong', type: 'error' });
     } finally { setSaving(false); }
   };
 
   const handleToggle = async () => {
     if (!token || !appId || !app) return;
-    const updated = await updateApp(token, appId, { isActive: !app.isActive });
-    setApp(updated);
+    try {
+      const updated = await updateApp(token, appId, { isActive: !app.isActive });
+      toast({ message: app.isActive ? 'App deactivated' : 'App activated', type: 'info' });
+      setApp(updated);
+    } catch {
+      toast({ message: 'Something went wrong', type: 'error' });
+    }
   };
 
   if (loading) {
