@@ -122,7 +122,7 @@ export default function AppsPage() {
                   <td className="px-5 py-4 text-right">
                     <Link
                       href={`/dashboard/apps/${app.id}`}
-                      className="text-xs text-zinc-500 hover:text-zinc-200 transition-colors opacity-0 group-hover:opacity-100"
+                      className="text-xs text-zinc-500 hover:text-violet-400 transition-colors"
                     >
                       Configure →
                     </Link>

@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { DashboardProvider, useDashboardAuth } from '@/components/dashboard/provider';
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
+import { MobileHeader } from '@/components/dashboard/mobile-header';
+import { ToastProvider } from '@/components/dashboard/toast';
 
 const PUBLIC = ['/dashboard/login', '/dashboard/register'];
 
@@ -11,6 +13,7 @@ function Guard({ children }: { children: React.ReactNode }) {
   const { session, loading } = useDashboardAuth();
   const router   = useRouter();
   const pathname = usePathname();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (loading) return;
@@ -33,8 +36,9 @@ function Guard({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <DashboardSidebar />
-      <div className="pl-60">
+      <MobileHeader onOpen={() => setSidebarOpen(true)} />
+      <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <div className="lg:pl-60 pt-14 lg:pt-0">
         <main className="min-h-screen p-8">
           {children}
         </main>
@@ -46,7 +50,9 @@ function Guard({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <DashboardProvider>
-      <Guard>{children}</Guard>
+      <ToastProvider>
+        <Guard>{children}</Guard>
+      </ToastProvider>
     </DashboardProvider>
   );
 }
