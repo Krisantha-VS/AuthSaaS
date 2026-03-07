@@ -83,6 +83,7 @@ export function DocsHeader() {
           <Link href="/docs/introduction"  className="hover:text-foreground transition-colors">Docs</Link>
           <Link href="/docs/api-reference" className="hover:text-foreground transition-colors">API</Link>
           <Link href="/docs/sdk-js"        className="hover:text-foreground transition-colors">SDKs</Link>
+          <Link href="/dashboard"          className="hover:text-foreground transition-colors">Dashboard</Link>
         </nav>
 
         {/* Right */}
