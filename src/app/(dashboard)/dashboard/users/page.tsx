@@ -313,7 +313,7 @@ export default function UsersPage() {
                         {/* Avatar + Name/Email */}
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <Avatar name={user.name} email={user.email} />
+                            <Avatar name={user.name ?? undefined} email={user.email} />
                             <div>
                               {user.name && (
                                 <p className="text-sm font-medium text-zinc-100">{user.name}</p>
