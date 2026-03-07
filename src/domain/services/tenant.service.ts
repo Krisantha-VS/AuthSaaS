@@ -1,0 +1,114 @@
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
+import { TenantRepository } from '@/infrastructure/db/repositories/tenant.repository';
+import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
+import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
+import { signAccessToken, signRefreshToken } from '@/infrastructure/jwt';
+import { RefreshTokenRepository } from '@/infrastructure/db/repositories/refresh-token.repository';
+
+const tenantRepo = new TenantRepository();
+const appRepo = new TenantAppRepository();
+const auditRepo = new AuditLogRepository();
+const refreshTokenRepo = new RefreshTokenRepository();
+
+const SALT_ROUNDS = 12;
+const REFRESH_TOKEN_TTL_DAYS = 7;
+
+function generateSecret(): { plain: string; hash: string } {
+  const plain = `sas_${crypto.randomBytes(32).toString('hex')}`;
+  const hash = bcrypt.hashSync(plain, SALT_ROUNDS);
+  return { plain, hash };
+}
+
+async function issueTenantTokens(tenantId: string, email: string) {
+  const accessToken = signAccessToken({ sub: tenantId, appId: 'dashboard', email, roles: ['tenant'] });
+  const refreshToken = signRefreshToken(tenantId);
+  const tokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+  await refreshTokenRepo.create({ tokenHash, userId: tenantId, appId: 'dashboard', expiresAt });
+  return { accessToken, refreshToken, expiresIn: 15 * 60 };
+}
+
+// ─── Tenant Register / Login ─────────────────────────────
+
+export async function registerTenant(params: {
+  name: string;
+  email: string;
+  password: string;
+  ipAddress?: string;
+}) {
+  const existing = await tenantRepo.findByEmail(params.email);
+  if (existing) throw new Error('EMAIL_TAKEN');
+
+  const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
+  const tenant = await tenantRepo.create({ name: params.name, email: params.email, password: passwordHash });
+
+  await auditRepo.create({ tenantId: tenant.id, action: 'tenant_register', resource: 'tenant', ipAddress: params.ipAddress });
+
+  const tokens = await issueTenantTokens(tenant.id, tenant.email);
+  return { tenant, tokens };
+}
+
+export async function loginTenant(params: {
+  email: string;
+  password: string;
+  ipAddress?: string;
+}) {
+  const record = await (tenantRepo as any).findByEmailWithPassword(params.email);
+  if (!record) throw new Error('INVALID_CREDENTIALS');
+
+  const valid = await bcrypt.compare(params.password, record.password);
+  if (!valid) throw new Error('INVALID_CREDENTIALS');
+
+  await auditRepo.create({ tenantId: record.id, action: 'tenant_login', resource: 'tenant', ipAddress: params.ipAddress });
+
+  const tokens = await issueTenantTokens(record.id, record.email);
+  return { tenant: { id: record.id, name: record.name, email: record.email }, tokens };
+}
+
+// ─── App Management ──────────────────────────────────────
+
+export async function createApp(params: {
+  tenantId: string;
+  name: string;
+  description?: string;
+  allowedOrigins: string[];
+}) {
+  const { plain, hash } = generateSecret();
+
+  const app = await appRepo.create({
+    tenantId: params.tenantId,
+    name: params.name,
+    description: params.description,
+    secretHash: hash,
+    allowedOrigins: params.allowedOrigins,
+  });
+
+  await auditRepo.create({ tenantId: params.tenantId, appId: app.id, action: 'app_created', resource: 'tenant_app' });
+
+  // plain secret shown ONCE — not stored retrievable
+  return { app, clientSecret: plain };
+}
+
+export async function listApps(tenantId: string) {
+  return appRepo.findByTenantId(tenantId);
+}
+
+export async function rotateSecret(appId: string, tenantId: string) {
+  const app = await appRepo.findById(appId);
+  if (!app || app.tenantId !== tenantId) throw new Error('NOT_FOUND');
+
+  const { plain, hash } = generateSecret();
+  await appRepo.update(appId, { secretHash: hash } as any);
+
+  await auditRepo.create({ tenantId, appId, action: 'secret_rotated', resource: 'tenant_app' });
+
+  return { clientSecret: plain };
+}
+
+export async function toggleApp(appId: string, tenantId: string, isActive: boolean) {
+  const app = await appRepo.findById(appId);
+  if (!app || app.tenantId !== tenantId) throw new Error('NOT_FOUND');
+
+  return appRepo.update(appId, { isActive } as any);
+}

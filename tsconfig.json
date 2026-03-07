@@ -19,7 +19,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@auth-saas/client": ["./packages/sdk-js/src/index.ts"],
+      "@auth-saas/client/react": ["./packages/sdk-js/src/react.tsx"]
     }
   },
   "include": [
