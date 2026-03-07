@@ -2,19 +2,29 @@ import { PageHeader, SectionHeading, SubHeading, Endpoint, ParamTable, Callout, 
 import { CodeBlock } from '@/components/docs/code-block';
 
 const toc = [
-  { id: 'base-url',         title: 'Base URL' },
-  { id: 'authentication',   title: 'Authentication' },
-  { id: 'auth-register',    title: 'POST /auth/register',   depth: 3 },
-  { id: 'auth-login',       title: 'POST /auth/login',      depth: 3 },
-  { id: 'auth-refresh',     title: 'POST /auth/refresh',    depth: 3 },
-  { id: 'auth-logout',      title: 'POST /auth/logout',     depth: 3 },
-  { id: 'tenant',           title: 'Tenant' },
-  { id: 'tenant-register',  title: 'POST /tenant/register', depth: 3 },
-  { id: 'tenant-login',     title: 'POST /tenant/login',    depth: 3 },
-  { id: 'tenant-apps',      title: 'GET /tenant/apps',      depth: 3 },
-  { id: 'tenant-apps-post', title: 'POST /tenant/apps',     depth: 3 },
-  { id: 'tenant-rotate',    title: 'POST /tenant/apps/:id/rotate', depth: 3 },
-  { id: 'errors',           title: 'Error codes' },
+  { id: 'base-url',              title: 'Base URL' },
+  { id: 'authentication',        title: 'Authentication' },
+  { id: 'auth-register',         title: 'POST /auth/register',           depth: 3 },
+  { id: 'auth-login',            title: 'POST /auth/login',              depth: 3 },
+  { id: 'auth-refresh',          title: 'POST /auth/refresh',            depth: 3 },
+  { id: 'auth-logout',           title: 'POST /auth/logout',             depth: 3 },
+  { id: 'auth-verify',           title: 'GET /auth/verify',              depth: 3 },
+  { id: 'auth-resend',           title: 'POST /auth/resend-verification', depth: 3 },
+  { id: 'tenant',                title: 'Tenant' },
+  { id: 'tenant-register',       title: 'POST /tenant/register',         depth: 3 },
+  { id: 'tenant-login',          title: 'POST /tenant/login',            depth: 3 },
+  { id: 'tenant-apps',           title: 'GET /tenant/apps',              depth: 3 },
+  { id: 'tenant-apps-post',      title: 'POST /tenant/apps',             depth: 3 },
+  { id: 'tenant-rotate',         title: 'POST /tenant/apps/:id/rotate',  depth: 3 },
+  { id: 'users',                 title: 'User Management' },
+  { id: 'users-list',            title: 'GET /users',                    depth: 3 },
+  { id: 'users-status',          title: 'PATCH /users/:id',              depth: 3 },
+  { id: 'users-roles',           title: 'PUT /users/:id/roles',          depth: 3 },
+  { id: 'roles',                 title: 'Role Management' },
+  { id: 'roles-list',            title: 'GET /roles',                    depth: 3 },
+  { id: 'roles-create',          title: 'POST /roles',                   depth: 3 },
+  { id: 'roles-permissions',     title: 'PUT /roles/:id/permissions',    depth: 3 },
+  { id: 'errors',                title: 'Error codes' },
 ];
 
 export default function ApiReferencePage() {
@@ -85,6 +95,31 @@ export default function ApiReferencePage() {
         <CodeBlock lang="bash" code={`curl -X POST /api/v1/auth/logout \\
   -H "Authorization: Bearer <access_token>"`} />
 
+        {/* Verify email */}
+        <SubHeading id="auth-verify">Verify email</SubHeading>
+        <Endpoint method="GET" path="/auth/verify" />
+        <p>Verifies a user's email address using the token sent in the verification email. Called automatically when the user clicks the link in their inbox.</p>
+        <ParamTable params={[
+          { name: 'token', type: 'string (query)', required: true, description: 'Verification token from email link' },
+          { name: 'email', type: 'string (query)', required: true, description: 'User email address' },
+        ]} />
+        <CodeBlock lang="json" filename="Response · 200" code={`{
+  "success": true,
+  "data": { "message": "Email verified successfully." }
+}`} />
+
+        {/* Resend verification */}
+        <SubHeading id="auth-resend">Resend verification email</SubHeading>
+        <Endpoint method="POST" path="/auth/resend-verification" />
+        <p>Re-sends the verification email. Rate-limited to 3 requests per 15 minutes per IP.</p>
+        <ParamTable params={[
+          { name: 'clientId', type: 'string', required: true, description: 'Your app client ID' },
+          { name: 'email',    type: 'string', required: true, description: 'User email address' },
+        ]} />
+        <Callout variant="note">
+          Generating a new token invalidates the previous one.
+        </Callout>
+
         {/* Tenant */}
         <SectionHeading id="tenant">Tenant Endpoints</SectionHeading>
         <p>These endpoints are for <strong>developers</strong> managing their apps. Protected routes require a tenant JWT.</p>
@@ -106,9 +141,9 @@ export default function ApiReferencePage() {
         <SubHeading id="tenant-apps-post">Create app</SubHeading>
         <Endpoint method="POST" path="/tenant/apps" description="Requires Bearer token" />
         <ParamTable params={[
-          { name: 'name',           type: 'string',     required: true,  description: 'App name' },
-          { name: 'description',    type: 'string',     required: false, description: 'Short description' },
-          { name: 'allowedOrigins', type: 'string[]',   required: true,  description: 'CORS origins e.g. ["https://myapp.com"]' },
+          { name: 'name',           type: 'string',   required: true,  description: 'App name' },
+          { name: 'description',    type: 'string',   required: false, description: 'Short description' },
+          { name: 'allowedOrigins', type: 'string[]', required: true,  description: 'CORS origins e.g. ["https://myapp.com"]' },
         ]} />
         <CodeBlock lang="json" filename="Response · 201" code={`{
   "success": true,
@@ -125,6 +160,114 @@ export default function ApiReferencePage() {
         <SubHeading id="tenant-rotate">Rotate client secret</SubHeading>
         <Endpoint method="POST" path="/tenant/apps/:id/rotate" description="Requires Bearer token" />
         <p>Invalidates the current secret and returns a new one. Existing app users are unaffected — only API calls using the old secret will fail.</p>
+
+        {/* User Management */}
+        <SectionHeading id="users">User Management</SectionHeading>
+        <p>Manage users within a specific app. All endpoints require a <strong>tenant Bearer token</strong> and an <code>appId</code> parameter scoped to the authenticated tenant.</p>
+
+        <SubHeading id="users-list">List users</SubHeading>
+        <Endpoint method="GET" path="/users?appId=xxx" description="Requires tenant Bearer token" />
+        <CodeBlock lang="json" filename="Response · 200" code={`{
+  "success": true,
+  "data": [
+    {
+      "id": "usr_xxx",
+      "email": "user@example.com",
+      "name": "Jane Doe",
+      "emailVerified": true,
+      "isActive": true,
+      "roles": ["user"],
+      "createdAt": "2024-01-15T10:30:00.000Z"
+    }
+  ]
+}`} />
+
+        <SubHeading id="users-status">Toggle user status</SubHeading>
+        <Endpoint method="PATCH" path="/users/:userId" description="Requires tenant Bearer token" />
+        <p>Toggles the <code>isActive</code> flag for the specified user. Deactivated users cannot log in and will receive an <code>ACCOUNT_DISABLED</code> error.</p>
+        <ParamTable params={[
+          { name: 'appId', type: 'string', required: true, description: 'App ID scoped to the authenticated tenant' },
+        ]} />
+
+        <SubHeading id="users-roles">Set user roles</SubHeading>
+        <Endpoint method="PUT" path="/users/:userId/roles" description="Requires tenant Bearer token" />
+        <p>Replaces <strong>all</strong> current roles for the user in this app with the given array.</p>
+        <ParamTable params={[
+          { name: 'appId', type: 'string',   required: true, description: 'App ID scoped to the authenticated tenant' },
+          { name: 'roles', type: 'string[]', required: true, description: 'Complete desired roles array for this user' },
+        ]} />
+        <Callout variant="warning">
+          This is a full replace, not a merge. Pass the complete desired roles array.
+          Pass an empty array <code>[]</code> to remove all roles.
+        </Callout>
+
+        {/* Role Management */}
+        <SectionHeading id="roles">Role Management</SectionHeading>
+        <p>Three default roles are created automatically for every new app: <code>owner</code>, <code>admin</code>, and <code>user</code>. You can create additional custom roles.</p>
+
+        <div className="overflow-x-auto rounded-lg border border-border my-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Role</th>
+                <th className="text-left px-4 py-2.5 font-medium text-muted-foreground">Permissions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ['user',  'read:profile, write:profile'],
+                ['admin', '+ read:users, write:users, read:audit, read:sessions'],
+                ['owner', '+ delete:users, read:roles, write:roles, delete:sessions'],
+              ].map(([role, perms]) => (
+                <tr key={role} className="border-b border-border last:border-0">
+                  <td className="px-4 py-2.5 font-mono text-violet-400 text-xs">{role}</td>
+                  <td className="px-4 py-2.5 text-muted-foreground">{perms}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <SubHeading id="roles-list">List roles</SubHeading>
+        <Endpoint method="GET" path="/roles?appId=xxx" description="Requires tenant Bearer token" />
+        <CodeBlock lang="json" filename="Response · 200" code={`{
+  "success": true,
+  "data": [
+    {
+      "id": "role_xxx",
+      "name": "editor",
+      "description": "Can read and write content",
+      "permissions": ["read:profile", "write:profile", "read:users"],
+      "userCount": 12
+    }
+  ]
+}`} />
+
+        <SubHeading id="roles-create">Create role</SubHeading>
+        <Endpoint method="POST" path="/roles" description="Requires tenant Bearer token" />
+        <ParamTable params={[
+          { name: 'appId',       type: 'string',   required: true,  description: 'App ID scoped to the authenticated tenant' },
+          { name: 'name',        type: 'string',   required: true,  description: 'Role name (min 2 characters)' },
+          { name: 'description', type: 'string',   required: false, description: 'Short description of the role' },
+          { name: 'permissions', type: 'string[]', required: false, description: 'Initial permissions e.g. ["read:users","write:users"]' },
+        ]} />
+        <CodeBlock lang="json" filename="Response · 201" code={`{
+  "success": true,
+  "data": { "id": "role_xxx", "name": "editor", "permissions": [], "userCount": 0 }
+}`} />
+
+        <SubHeading id="roles-permissions">Update role permissions</SubHeading>
+        <Endpoint method="PUT" path="/roles/:roleId/permissions" description="Requires tenant Bearer token" />
+        <p>Full replace of permissions for the role. Available permission strings:</p>
+        <CodeBlock lang="text" code={`read:profile    write:profile
+read:users      write:users     delete:users
+read:roles      write:roles
+read:audit
+read:sessions   delete:sessions`} />
+        <ParamTable params={[
+          { name: 'appId',       type: 'string',   required: true, description: 'App ID scoped to the authenticated tenant' },
+          { name: 'permissions', type: 'string[]', required: true, description: 'Complete desired permissions array for this role' },
+        ]} />
 
         {/* Error codes */}
         <SectionHeading id="errors">Error codes</SectionHeading>
@@ -153,6 +296,12 @@ export default function ApiReferencePage() {
                 ['NOT_FOUND',           '404', 'Resource not found'],
                 ['VALIDATION_ERROR',    '400', 'Request body failed validation'],
                 ['INTERNAL_ERROR',      '500', 'Unexpected server error'],
+                ['ALREADY_VERIFIED',    '409', 'Email already verified'],
+                ['EMAIL_NOT_VERIFIED',  '403', 'Email not yet verified'],
+                ['RATE_LIMITED',        '429', 'Too many requests, see Retry-After header'],
+                ['ROLE_NOT_FOUND',      '404', 'Role not found'],
+                ['ROLE_EXISTS',         '409', 'Role name already exists in this app'],
+                ['FORBIDDEN',           '403', 'Insufficient role for this operation'],
               ].map(([code, status, meaning]) => (
                 <tr key={code} className="border-b border-border last:border-0">
                   <td className="px-4 py-2.5 font-mono text-violet-400 text-xs">{code}</td>
