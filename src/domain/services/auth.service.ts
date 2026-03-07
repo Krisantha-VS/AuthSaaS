@@ -5,6 +5,9 @@ import { UserRepository } from '@/infrastructure/db/repositories/user.repository
 import { RefreshTokenRepository } from '@/infrastructure/db/repositories/refresh-token.repository';
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
+import { sendMail } from '@/infrastructure/email/mailer';
+import { verificationEmail } from '@/infrastructure/email/templates';
+import { config } from '@/shared/config';
 import type { AuthTokens } from '@/shared/types';
 
 const userRepo = new UserRepository();
@@ -66,7 +69,13 @@ export async function register(params: {
   });
 
   const tokens = await issueTokens(user.id, app.id, user.email, user.roles);
-  return { user, tokens, verifyToken: verifyTokenRaw }; // raw token for email, hash stored in DB
+
+  // Send verification email (non-blocking — don't fail registration if email fails)
+  const verifyUrl = `${config.app.url}/api/v1/auth/verify?token=${verifyTokenRaw}&email=${encodeURIComponent(params.email)}`;
+  const { subject, html } = verificationEmail({ name: params.name ?? null, verifyUrl });
+  sendMail(params.email, subject, html).catch(err => console.error('[email] verification send failed:', err));
+
+  return { user, tokens };
 }
 
 export async function login(params: {
@@ -138,4 +147,33 @@ export async function logout(params: { userId: string; appId: string }) {
     action: 'logout',
     resource: 'auth',
   });
+}
+
+export async function verifyEmail(params: { token: string; email: string }) {
+  const tokenHash = hashToken(params.token);
+  const user = await (userRepo as any).findByVerifyToken(tokenHash);
+  if (!user) throw new Error('INVALID_TOKEN');
+  if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
+
+  await userRepo.update(user.id, { emailVerified: true, verifyToken: null } as any);
+}
+
+export async function resendVerification(params: {
+  clientId: string;
+  email: string;
+}) {
+  const app = await tenantAppRepo.findByClientId(params.clientId);
+  if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
+
+  const user = await userRepo.findByEmail(app.id, params.email);
+  if (!user) throw new Error('USER_NOT_FOUND');
+  if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
+
+  const verifyTokenRaw = crypto.randomBytes(32).toString('hex');
+  const verifyToken = hashToken(verifyTokenRaw);
+  await userRepo.update(user.id, { verifyToken } as any);
+
+  const verifyUrl = `${config.app.url}/api/v1/auth/verify?token=${verifyTokenRaw}&email=${encodeURIComponent(params.email)}`;
+  const { subject, html } = verificationEmail({ name: user.name ?? null, verifyUrl });
+  await sendMail(params.email, subject, html);
 }

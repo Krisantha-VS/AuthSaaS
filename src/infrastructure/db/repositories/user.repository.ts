@@ -26,6 +26,14 @@ export class UserRepository implements IUserRepository {
     });
   }
 
+  async findByVerifyToken(tokenHash: string): Promise<UserEntity | null> {
+    const user = await prisma.user.findFirst({
+      where: { verifyToken: tokenHash },
+      include: { roles: { include: { role: true } } },
+    });
+    return user ? this.toEntity(user) : null;
+  }
+
   async create(data: { appId: string; email: string; passwordHash: string; name?: string }): Promise<UserEntity> {
     const user = await prisma.user.create({
       data,
