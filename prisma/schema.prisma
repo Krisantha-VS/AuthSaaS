@@ -33,6 +33,7 @@ model TenantApp {
   updatedAt      DateTime       @updatedAt
   auditLogs      AuditLog[]
   refreshTokens  RefreshToken[]
+  roles          Role[]
   tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users          User[]
   webhooks       Webhook[]
@@ -64,12 +65,15 @@ model User {
 
 model Role {
   id          String           @id @default(cuid())
-  name        String           @unique
+  appId       String
+  name        String
   description String?
   createdAt   DateTime         @default(now())
+  app         TenantApp        @relation(fields: [appId], references: [id], onDelete: Cascade)
   permissions RolePermission[]
   users       UserRole[]
 
+  @@unique([appId, name])
   @@map("roles")
 }
 

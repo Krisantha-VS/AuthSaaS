@@ -9,6 +9,7 @@ import { sendMail } from '@/infrastructure/email/mailer';
 import { verificationEmail } from '@/infrastructure/email/templates';
 import { config } from '@/shared/config';
 import type { AuthTokens } from '@/shared/types';
+import { assignRole } from '@/domain/services/rbac.service';
 
 const userRepo = new UserRepository();
 const refreshTokenRepo = new RefreshTokenRepository();
@@ -69,6 +70,9 @@ export async function register(params: {
   });
 
   const tokens = await issueTokens(user.id, app.id, user.email, user.roles);
+
+  // Auto-assign default 'user' role (non-blocking)
+  assignRole(user.id, app.id, 'user').catch(e => console.error('[rbac] role assign failed:', e));
 
   // Send verification email (non-blocking — don't fail registration if email fails)
   const verifyUrl = `${config.app.url}/api/v1/auth/verify?token=${verifyTokenRaw}&email=${encodeURIComponent(params.email)}`;

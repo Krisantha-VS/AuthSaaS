@@ -5,6 +5,7 @@ import { TenantRepository } from '@/infrastructure/db/repositories/tenant.reposi
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
 import { config } from '@/shared/config';
+import { seedDefaultRoles } from '@/domain/services/rbac.service';
 
 const tenantRepo = new TenantRepository();
 const appRepo = new TenantAppRepository();
@@ -84,6 +85,8 @@ export async function createApp(params: {
   });
 
   await auditRepo.create({ tenantId: params.tenantId, appId: app.id, action: 'app_created', resource: 'tenant_app' });
+
+  await seedDefaultRoles(app.id);
 
   // plain secret shown ONCE — not stored retrievable
   return { app, clientSecret: plain };
