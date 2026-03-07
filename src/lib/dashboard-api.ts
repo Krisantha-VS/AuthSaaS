@@ -131,3 +131,95 @@ export function getStats(token: string) {
 export function getAuditLogs(token: string, limit = 20) {
   return request<AuditLog[]>(`/audit?limit=${limit}`, {}, token);
 }
+
+// ─── RBAC Types ───────────────────────────────────────────────────────────────
+
+export interface UserWithRoles {
+  id: string;
+  email: string;
+  name: string | null;
+  emailVerified: boolean;
+  isActive: boolean;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface RoleWithPermissions {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: string[];
+  userCount: number;
+}
+
+// ─── User Management ─────────────────────────────────────────────────────────
+
+export async function getUsers(token: string, appId: string): Promise<UserWithRoles[]> {
+  const res = await fetch(`${BASE}/users?appId=${appId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.users;
+}
+
+export async function updateUserRoles(token: string, userId: string, appId: string, roles: string[]): Promise<void> {
+  const res = await fetch(`${BASE}/users/${userId}/roles`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId, roles }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
+export async function toggleUserStatus(token: string, userId: string, appId: string): Promise<UserWithRoles> {
+  const res = await fetch(`${BASE}/users/${userId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.user;
+}
+
+// ─── Role Management ─────────────────────────────────────────────────────────
+
+export async function getRoles(token: string, appId: string): Promise<RoleWithPermissions[]> {
+  const res = await fetch(`${BASE}/roles?appId=${appId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.roles;
+}
+
+export async function createRole(
+  token: string,
+  appId: string,
+  data: { name: string; description?: string; permissions?: string[] },
+): Promise<void> {
+  const res = await fetch(`${BASE}/roles`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId, ...data }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
+export async function updateRolePermissions(
+  token: string,
+  roleId: string,
+  appId: string,
+  permissions: string[],
+): Promise<void> {
+  const res = await fetch(`${BASE}/roles/${roleId}/permissions`, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId, permissions }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
