@@ -6,6 +6,8 @@ import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
 import { config } from '@/shared/config';
 import { seedDefaultRoles } from '@/domain/services/rbac.service';
+import { sendMail } from '@/infrastructure/email/mailer';
+import { passwordResetEmail } from '@/infrastructure/email/templates';
 
 const tenantRepo = new TenantRepository();
 const appRepo = new TenantAppRepository();
@@ -64,6 +66,38 @@ export async function loginTenant(params: {
 
   const tokens = issueTenantTokens(record.id, record.email);
   return { tenant: { id: record.id, name: record.name, email: record.email }, tokens };
+}
+
+// ─── Tenant Forgot / Reset Password ──────────────────────
+
+function hashToken(token: string) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+export async function forgotTenantPassword(email: string) {
+  // Always silent — never reveal if email exists
+  const tenant = await (tenantRepo as any).findByEmailWithPassword(email);
+  if (!tenant) return;
+
+  const rawToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = hashToken(rawToken);
+  const exp = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+  await tenantRepo.update(tenant.id, { resetToken: tokenHash, resetTokenExp: exp } as any);
+
+  const resetUrl = `${config.app.url}/dashboard/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
+  const { subject, html } = passwordResetEmail({ name: tenant.name ?? null, resetUrl });
+  await sendMail(email, subject, html);
+}
+
+export async function resetTenantPassword(params: { token: string; email: string; password: string }) {
+  const tokenHash = hashToken(params.token);
+  const tenant = await (tenantRepo as any).findByResetToken(tokenHash);
+  if (!tenant) throw new Error('INVALID_TOKEN');
+  if (tenant.resetTokenExp < new Date()) throw new Error('TOKEN_EXPIRED');
+
+  const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
+  await tenantRepo.update(tenant.id, { password: passwordHash, resetToken: null, resetTokenExp: null } as any);
 }
 
 // ─── App Management ──────────────────────────────────────

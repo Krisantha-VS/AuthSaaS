@@ -17,6 +17,10 @@ export class TenantRepository implements ITenantRepository {
     return prisma.tenant.findUnique({ where: { email } });
   }
 
+  async findByResetToken(tokenHash: string) {
+    return prisma.tenant.findFirst({ where: { resetToken: tokenHash } });
+  }
+
   async create(data: { name: string; email: string; password: string }): Promise<TenantEntity> {
     const t = await prisma.tenant.create({ data });
     return this.toEntity(t);
