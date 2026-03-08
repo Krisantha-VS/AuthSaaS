@@ -46,6 +46,16 @@ const NAV = [
     ),
   },
   {
+    href: '/dashboard/sessions',
+    label: 'Sessions',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <rect x="2" y="4" width="20" height="14" rx="2"/>
+        <path d="M8 20h8M12 18v2"/>
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/audit',
     label: 'Audit Log',
     icon: (

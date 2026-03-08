@@ -27,4 +27,15 @@ export class RefreshTokenRepository implements IRefreshTokenRepository {
       where: { expiresAt: { lt: new Date() } },
     });
   }
+
+  async findActiveForApp(appId: string): Promise<RefreshTokenEntity[]> {
+    return prisma.refreshToken.findMany({
+      where: { appId, usedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async deleteById(id: string): Promise<void> {
+    await prisma.refreshToken.delete({ where: { id } });
+  }
 }

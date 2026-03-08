@@ -210,6 +210,34 @@ export async function createRole(
   if (!json.success) throw new Error(json.error);
 }
 
+// ─── Sessions ─────────────────────────────────────────────────────────────────
+
+export interface SessionInfo {
+  id: string;
+  userId: string;
+  appId: string;
+  createdAt: string;
+  expiresAt: string;
+}
+
+export async function getSessions(token: string, appId: string): Promise<SessionInfo[]> {
+  const res = await fetch(`/api/v1/sessions?appId=${appId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.sessions;
+}
+
+export async function revokeSession(token: string, sessionId: string): Promise<void> {
+  const res = await fetch(`/api/v1/sessions/${sessionId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
 export async function updateRolePermissions(
   token: string,
   roleId: string,
