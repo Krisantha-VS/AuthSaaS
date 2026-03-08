@@ -6,13 +6,14 @@ const refreshTokenRepo = new RefreshTokenRepository();
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { sessionId: string } },
+  { params }: { params: Promise<{ sessionId: string }> },
 ) {
   const auth = requireAuth(req);
   if (!isTenantAuth(auth)) return err('Unauthorized', 'UNAUTHORIZED', 401);
 
   try {
-    await refreshTokenRepo.deleteById(params.sessionId);
+    const { sessionId } = await params;
+    await refreshTokenRepo.deleteById(sessionId);
     return ok({ revoked: true });
   } catch (e) {
     return handleError(e);
