@@ -1,9 +1,17 @@
 import { refresh } from '@/domain/services/auth.service';
 import { refreshSchema } from '@/shared/lib/validators';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
+import { handlePreflight, withCors } from '@/shared/lib/cors';
 import { cookies } from 'next/headers';
 
+export async function OPTIONS(req: Request) {
+  return handlePreflight(req, ['*']) ?? new Response(null, { status: 204 });
+}
+
 export async function POST(req: Request) {
+  const preflight = handlePreflight(req, ['*']);
+  if (preflight) return preflight;
+
   try {
     // Accept token from body OR httpOnly cookie
     const cookieStore = await cookies();
@@ -15,7 +23,9 @@ export async function POST(req: Request) {
 
     const tokens = await refresh({ refreshToken: parsed.data.refreshToken, ipAddress: getIp(req) });
 
-    return ok(tokens);
+    const res = ok(tokens);
+    const origin = req.headers.get('origin');
+    return origin ? withCors(res, origin) : res;
   } catch (e) {
     return handleError(e);
   }
