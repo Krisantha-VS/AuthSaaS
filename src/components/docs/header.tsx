@@ -74,7 +74,7 @@ export function DocsHeader() {
       <div className="max-w-[1400px] mx-auto flex items-center justify-between h-14 px-6">
 
         {/* Logo */}
-        <Link href="/docs/introduction" className="hover:opacity-80 transition-opacity">
+        <Link href="/" className="hover:opacity-80 transition-opacity">
           <AuthSaasLogo size={30} />
         </Link>
 
