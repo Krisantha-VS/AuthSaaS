@@ -14,11 +14,10 @@ export async function GET(req: Request) {
 
   try {
     const tokens = await refreshTokenRepo.findActiveForApp(appId);
-    const sessions = tokens.map(({ id, appId, userId, createdAt, expiresAt }) => ({
+    const sessions = tokens.map(({ id, appId, userId, expiresAt }) => ({
       id,
       appId,
       userId,
-      createdAt,
       expiresAt,
     }));
     return ok({ sessions });
