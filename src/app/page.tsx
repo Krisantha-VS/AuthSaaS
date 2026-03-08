@@ -51,10 +51,29 @@ const features = [
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
       </svg>
     ),
-    title: 'Security Hardened',
-    desc: 'Rate limiting, CORS enforcement, password complexity, security headers, and HS256-pinned JWTs.',
+    title: 'Account Lockout',
+    desc: '5 consecutive failed logins trigger a 15-minute lockout per email+app. Separate from IP rate limiting — both apply simultaneously.',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+      </svg>
+    ),
+    title: 'Session Control',
+    desc: 'View and revoke individual user sessions from the dashboard. All sessions invalidated on password reset or token reuse detection.',
+  },
+  {
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+      </svg>
+    ),
+    title: 'CSP + Security Headers',
+    desc: 'Full security header suite: HSTS, CSP, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy on every response.',
   },
 ];
 
@@ -192,7 +211,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold mb-3">Everything auth needs</h2>
           <p className="text-zinc-400">Production-grade, not toy examples.</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map(f => (
             <div key={f.title} className="p-5 rounded-xl border border-white/[0.06] bg-zinc-900 hover:border-violet-500/20 transition-colors">
               <div className="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400 mb-4">

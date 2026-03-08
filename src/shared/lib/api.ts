@@ -29,6 +29,7 @@ const ERROR_MAP: Record<string, { status: number; message: string }> = {
   EMAIL_NOT_VERIFIED:  { status: 403, message: 'Email not verified. Check your inbox.' },
   ROLE_NOT_FOUND:      { status: 404, message: 'Role not found' },
   ROLE_EXISTS:         { status: 409, message: 'Role already exists' },
+  ACCOUNT_LOCKED:      { status: 429, message: 'Account temporarily locked due to too many failed attempts' },
 };
 
 export function handleError(e: unknown) {

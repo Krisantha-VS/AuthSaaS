@@ -14,6 +14,9 @@ const toc = [
   { id: 'cors',                title: 'CORS enforcement' },
   { id: 'password-policy',     title: 'Password policy' },
   { id: 'security-headers',    title: 'Security headers' },
+  { id: 'csp',                 title: 'Content Security Policy' },
+  { id: 'account-lockout',     title: 'Account lockout' },
+  { id: 'session-mgmt',        title: 'Session management' },
 ];
 
 export default function SecurityPage() {
@@ -200,6 +203,68 @@ X-Frame-Options: SAMEORIGIN
 X-Content-Type-Options: nosniff
 Referrer-Policy: strict-origin-when-cross-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=()`} />
+
+        <SectionHeading id="csp">Content Security Policy</SectionHeading>
+        <p>
+          AuthSaas sets a <code>Content-Security-Policy</code> header on all responses. The current policy is:
+        </p>
+        <CodeBlock lang="text" code={`Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';`} />
+        <ul>
+          <li>
+            <code>frame-ancestors &apos;none&apos;</code> prevents the AuthSaas dashboard from being embedded in
+            an <code>&lt;iframe&gt;</code>, protecting against clickjacking attacks. This is enforced in addition
+            to the <code>X-Frame-Options</code> header for maximum browser compatibility.
+          </li>
+          <li>
+            Future versions will adopt <strong>nonce-based CSP</strong> to eliminate <code>&apos;unsafe-inline&apos;</code>{' '}
+            and <code>&apos;unsafe-eval&apos;</code>, providing stricter script control without breaking Next.js hydration.
+          </li>
+        </ul>
+
+        <SectionHeading id="account-lockout">Account lockout</SectionHeading>
+        <p>
+          After <strong>5 consecutive failed login attempts</strong> for the same email and app combination,
+          the account is locked for <strong>15 minutes</strong>. During this period all login attempts for
+          that email+app return a <code>429 ACCOUNT_LOCKED</code> response with a <code>Retry-After</code> header
+          indicating the remaining lockout duration in seconds.
+        </p>
+        <ul>
+          <li>The failed-attempt counter resets automatically on a successful login.</li>
+          <li>
+            Account lockout is <strong>separate from IP-based rate limiting</strong> — both checks apply
+            simultaneously. A request can be blocked by either or both mechanisms.
+          </li>
+        </ul>
+        <CodeBlock lang="json" code={`// 429 response body
+{
+  "success": false,
+  "error": "Account temporarily locked. Too many failed attempts.",
+  "code": "ACCOUNT_LOCKED"
+}
+
+// 429 response headers
+Retry-After: 743`} />
+
+        <SectionHeading id="session-mgmt">Session management</SectionHeading>
+        <p>
+          Every successful login creates a <strong>refresh token record (session)</strong> in the database,
+          linked to the user, app, and device metadata. Sessions are the source of truth for active logins.
+        </p>
+        <ul>
+          <li>Tenant admins can view all active sessions per app from <strong>Dashboard → Sessions</strong>.</li>
+          <li>Individual sessions can be revoked at any time via the dashboard UI or the API.</li>
+          <li>All sessions are <strong>automatically invalidated on password reset</strong>.</li>
+          <li>
+            <strong>Token reuse detection</strong> triggers family invalidation — every session for the
+            affected user is immediately revoked.
+          </li>
+        </ul>
+        <CodeBlock lang="text" code={`GET    /api/v1/sessions?appId=xxx   — list active sessions (tenant auth)
+DELETE /api/v1/sessions/:id         — revoke a session (tenant auth)`} />
+        <Callout variant="note">
+          Both endpoints require tenant-level authentication (your dashboard JWT). End users cannot
+          enumerate or revoke other users&apos; sessions.
+        </Callout>
       </div>
 
       <OnThisPage items={toc} />
