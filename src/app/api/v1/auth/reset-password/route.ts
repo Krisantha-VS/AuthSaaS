@@ -6,7 +6,7 @@ import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const parsed = resetPasswordSchema.safeParse(body);
-  if (!parsed.success) return err(parsed.error.errors[0].message, 'VALIDATION_ERROR');
+  if (!parsed.success) return err(parsed.error.issues[0].message, 'VALIDATION_ERROR');
 
   const key = `reset:${parsed.data.email}`;
   if (!checkRateLimit(key, 5, 15 * 60 * 1000)) {
