@@ -41,7 +41,8 @@ export function withCors(response: NextResponse, origin: string): NextResponse {
 export function handlePreflight(req: Request, allowedOrigins: string[]): NextResponse | null {
   if (req.method !== 'OPTIONS') return null;
   const origin = req.headers.get('origin') ?? '';
-  if (!allowedOrigins.includes(origin)) {
+  const allowed = allowedOrigins.includes('*') || allowedOrigins.includes(origin);
+  if (!allowed) {
     return new NextResponse(null, { status: 204 });
   }
   const res = new NextResponse(null, { status: 204 });
