@@ -94,4 +94,4 @@ export async function updateRolePermissions(roleId: string, appId: string, permi
   await roleRepo.setRolePermissions(roleId, permissions);
 }
 
-export { RoleWithPermissions } from '@/infrastructure/db/repositories/role.repository';
+export type { RoleWithPermissions } from '@/infrastructure/db/repositories/role.repository';
