@@ -64,7 +64,7 @@ export async function POST(req: Request) {
     // Successful login — clear any accumulated failures
     clearFailedAttempts(lockoutKey);
 
-    const res = ok(result.tokens);
+    const res = ok(result);
     return corsOrigin ? withCors(res, corsOrigin) : res;
   } catch (e) {
     const errorRes = handleError(e);

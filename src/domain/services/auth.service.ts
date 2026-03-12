@@ -108,7 +108,9 @@ export async function login(params: {
 
   const roles = userWithPassword.roles?.map((ur: any) => ur.role.name) ?? [];
   const tokens = await issueTokens(userWithPassword.id, app.id, userWithPassword.email, roles);
-  return { tokens };
+
+  const { passwordHash: _ph, verifyToken: _vt, resetToken: _rt, resetTokenExp: _rte, ...safeUser } = userWithPassword;
+  return { user: safeUser, tokens };
 }
 
 export async function refresh(params: { refreshToken: string; ipAddress?: string }) {
