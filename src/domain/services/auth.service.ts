@@ -79,7 +79,21 @@ export async function register(params: {
   const { subject, html } = verificationEmail({ name: params.name ?? null, verifyUrl });
   sendMail(params.email, subject, html).catch(err => console.error('[email] verification send failed:', err));
 
-  return { user, tokens };
+  const userRoles: string[] = Array.isArray((user as any).roles)
+    ? (user as any).roles.map((ur: any) => typeof ur === 'string' ? ur : ur.role?.name ?? ur.name)
+    : [];
+
+  const safeUser = {
+    id:            user.id,
+    email:         user.email,
+    name:          user.name,
+    emailVerified: user.emailVerified,
+    isActive:      user.isActive,
+    createdAt:     user.createdAt,
+    role:          userRoles[0] ?? null,
+    roles:         userRoles,
+  };
+  return { user: safeUser, tokens };
 }
 
 export async function login(params: {
@@ -109,8 +123,17 @@ export async function login(params: {
   const roles = userWithPassword.roles?.map((ur: any) => ur.role.name) ?? [];
   const tokens = await issueTokens(userWithPassword.id, app.id, userWithPassword.email, roles);
 
-  const { passwordHash: _ph, verifyToken: _vt, resetToken: _rt, resetTokenExp: _rte, ...safeUser } = userWithPassword;
-  return { user: safeUser, tokens };
+  const user = {
+    id:            userWithPassword.id,
+    email:         userWithPassword.email,
+    name:          userWithPassword.name,
+    emailVerified: userWithPassword.emailVerified,
+    isActive:      userWithPassword.isActive,
+    createdAt:     userWithPassword.createdAt,
+    role:          roles[0] ?? null,   // singular — required by C# SDK AuthUser
+    roles,                              // plural array — for other clients
+  };
+  return { user, tokens };
 }
 
 export async function refresh(params: { refreshToken: string; ipAddress?: string }) {
