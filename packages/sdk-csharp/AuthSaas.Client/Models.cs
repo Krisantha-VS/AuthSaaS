@@ -24,7 +24,7 @@ public sealed class AuthUser
     public required string Id    { get; init; }
     public required string Email { get; init; }
     public string?         Name  { get; init; }
-    public required string Role  { get; init; }
+    public string?         Role  { get; init; }  // null for new users with no role assigned yet
 }
 
 /// <summary>Result of a login or register operation.</summary>
