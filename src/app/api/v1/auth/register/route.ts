@@ -17,6 +17,9 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const ip = getIp(req);
+  const origin = req.headers.get('origin');
+  let corsOrigin: string | null = null;
+
   if (!checkRateLimit(`register:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
     return err('Too many requests. Try again later.', 'RATE_LIMITED', 429,
       { 'Retry-After': String(retryAfterSeconds(`register:${ip}`)) });
@@ -31,12 +34,14 @@ export async function POST(req: Request) {
     const originBlock = app ? checkOrigin(req, app.allowedOrigins) : null;
     if (originBlock) return originBlock;
 
+    if (origin && app) corsOrigin = origin;
+
     const result = await register({ ...parsed.data, ipAddress: ip });
 
     const res = ok({ user: result.user, tokens: result.tokens }, 201);
-    const origin = req.headers.get('origin');
-    return origin && app ? withCors(res, origin) : res;
+    return corsOrigin ? withCors(res, corsOrigin) : res;
   } catch (e) {
-    return handleError(e);
+    const errorRes = handleError(e);
+    return corsOrigin ? withCors(errorRes, corsOrigin) : errorRes;
   }
 }

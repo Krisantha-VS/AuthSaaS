@@ -12,6 +12,8 @@ export async function POST(req: Request) {
   const preflight = handlePreflight(req, ['*']);
   if (preflight) return preflight;
 
+  const origin = req.headers.get('origin');
+
   try {
     // Accept token from body OR httpOnly cookie
     const cookieStore = await cookies();
@@ -24,9 +26,9 @@ export async function POST(req: Request) {
     const tokens = await refresh({ refreshToken: parsed.data.refreshToken, ipAddress: getIp(req) });
 
     const res = ok(tokens);
-    const origin = req.headers.get('origin');
     return origin ? withCors(res, origin) : res;
   } catch (e) {
-    return handleError(e);
+    const errorRes = handleError(e);
+    return origin ? withCors(errorRes, origin) : errorRes;
   }
 }

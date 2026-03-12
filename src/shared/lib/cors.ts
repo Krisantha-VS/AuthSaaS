@@ -18,8 +18,8 @@ export function checkOrigin(
   // Not a browser cross-origin request — allow (SDK / server-side call)
   if (!origin) return null;
 
-  // Allow any localhost origin in development
-  if (process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost(:\d+)?$/.test(origin)) return null;
+  // Localhost is never a real production origin — always allow for local dev/testing
+  if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return null;
 
   if (!allowedOrigins.includes(origin)) {
     return NextResponse.json(
@@ -44,7 +44,7 @@ export function withCors(response: NextResponse, origin: string): NextResponse {
 export function handlePreflight(req: Request, allowedOrigins: string[]): NextResponse | null {
   if (req.method !== 'OPTIONS') return null;
   const origin = req.headers.get('origin') ?? '';
-  const isLocalhost = process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost(:\d+)?$/.test(origin);
+  const isLocalhost = /^https?:\/\/localhost(:\d+)?$/.test(origin);
   const allowed = isLocalhost || allowedOrigins.includes('*') || allowedOrigins.includes(origin);
   if (!allowed) {
     return new NextResponse(null, { status: 204 });

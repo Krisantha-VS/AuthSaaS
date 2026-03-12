@@ -19,6 +19,9 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const ip = getIp(req);
+  const origin = req.headers.get('origin');
+  let corsOrigin: string | null = null; // set after origin is validated against app
+
   if (!checkRateLimit(`login:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
     return err('Too many login attempts. Try again later.', 'RATE_LIMITED', 429,
       { 'Retry-After': String(retryAfterSeconds(`login:${ip}`)) });
@@ -45,6 +48,9 @@ export async function POST(req: Request) {
     const originBlock = app ? checkOrigin(req, app.allowedOrigins) : null;
     if (originBlock) return originBlock;
 
+    // Origin is validated — attach CORS to all further responses (including errors)
+    if (origin && app) corsOrigin = origin;
+
     let result: Awaited<ReturnType<typeof login>>;
     try {
       result = await login({ ...parsed.data, ipAddress: ip });
@@ -59,9 +65,9 @@ export async function POST(req: Request) {
     clearFailedAttempts(lockoutKey);
 
     const res = ok(result.tokens);
-    const origin = req.headers.get('origin');
-    return origin && app ? withCors(res, origin) : res;
+    return corsOrigin ? withCors(res, corsOrigin) : res;
   } catch (e) {
-    return handleError(e);
+    const errorRes = handleError(e);
+    return corsOrigin ? withCors(errorRes, corsOrigin) : errorRes;
   }
 }
