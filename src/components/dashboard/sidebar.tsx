@@ -56,6 +56,17 @@ const NAV = [
     ),
   },
   {
+    href: '/dashboard/webhooks',
+    label: 'Webhooks',
+    icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path d="M18 16.8a7.14 7.14 0 0 0 2.24-5.32c0-4.12-3.36-7.48-7.52-7.48-2.1 0-4 .87-5.38 2.26"/>
+        <path d="M7.12 8.48A7.14 7.14 0 0 0 4.88 13.8c0 4.12 3.36 7.48 7.52 7.48 2.04 0 3.9-.81 5.26-2.12"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/audit',
     label: 'Audit Log',
     icon: (

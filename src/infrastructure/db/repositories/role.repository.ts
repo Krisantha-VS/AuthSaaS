@@ -95,6 +95,12 @@ export class RoleRepository {
     }
   }
 
+  async delete(roleId: string): Promise<void> {
+    await prisma.rolePermission.deleteMany({ where: { roleId } });
+    await prisma.userRole.deleteMany({ where: { roleId } });
+    await prisma.role.delete({ where: { id: roleId } });
+  }
+
   async getUsersWithRoles(appId: string) {
     return prisma.user.findMany({
       where: { appId },

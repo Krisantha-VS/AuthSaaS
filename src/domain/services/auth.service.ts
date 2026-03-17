@@ -10,6 +10,7 @@ import { verificationEmail, passwordResetEmail } from '@/infrastructure/email/te
 import { config } from '@/shared/config';
 import type { AuthTokens } from '@/shared/types';
 import { assignRole } from '@/domain/services/rbac.service';
+import { dispatchWebhookEvent } from '@/domain/services/webhook.service';
 
 const userRepo = new UserRepository();
 const refreshTokenRepo = new RefreshTokenRepository();
@@ -74,6 +75,9 @@ export async function register(params: {
   // Auto-assign default 'user' role (non-blocking)
   assignRole(user.id, app.id, 'user').catch(e => console.error('[rbac] role assign failed:', e));
 
+  // Dispatch webhook (non-blocking)
+  dispatchWebhookEvent(app.id, 'user.registered', { userId: user.id, email: user.email, name: user.name ?? null }).catch(() => {});
+
   // Send verification email (non-blocking — don't fail registration if email fails)
   const verifyUrl = `${config.app.url}/api/v1/auth/verify?token=${verifyTokenRaw}&email=${encodeURIComponent(params.email)}`;
   const { subject, html } = verificationEmail({ name: params.name ?? null, verifyUrl });
@@ -122,6 +126,9 @@ export async function login(params: {
 
   const roles = userWithPassword.roles?.map((ur: any) => ur.role.name) ?? [];
   const tokens = await issueTokens(userWithPassword.id, app.id, userWithPassword.email, roles);
+
+  // Dispatch webhook (non-blocking)
+  dispatchWebhookEvent(app.id, 'user.login', { userId: userWithPassword.id, email: userWithPassword.email }).catch(() => {});
 
   const user = {
     id:            userWithPassword.id,
@@ -185,6 +192,7 @@ export async function verifyEmail(params: { token: string; email: string }) {
   if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
 
   await userRepo.update(user.id, { emailVerified: true, verifyToken: null } as any);
+  dispatchWebhookEvent(user.appId, 'user.verified', { userId: user.id, email: user.email }).catch(() => {});
 }
 
 export async function forgotPassword(params: {
@@ -224,6 +232,7 @@ export async function resetPassword(params: {
 
   // Invalidate all sessions after password reset
   await refreshTokenRepo.deleteAllForUser(user.id);
+  dispatchWebhookEvent(user.appId, 'user.password_reset', { userId: user.id, email: user.email }).catch(() => {});
 }
 
 export async function resendVerification(params: {

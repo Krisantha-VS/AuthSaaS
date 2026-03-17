@@ -51,3 +51,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ userId
     return handleError(e);
   }
 }
+
+export async function DELETE(req: Request, { params }: { params: Promise<{ userId: string }> }) {
+  const auth = requireAuth(req);
+  if (!isTenantAuth(auth)) return auth;
+
+  try {
+    const { userId } = await params;
+    const { searchParams } = new URL(req.url);
+    const appId = searchParams.get('appId') ?? '';
+
+    const app = await appRepo.findById(appId);
+    if (!app || app.tenantId !== auth.payload.sub) return err('Not found', 'NOT_FOUND', 404);
+
+    const user = await userRepo.findById(userId);
+    if (!user || user.appId !== appId) return err('User not found', 'NOT_FOUND', 404);
+
+    await userRepo.delete(userId);
+    return ok({ message: 'User deleted' });
+  } catch (e) {
+    return handleError(e);
+  }
+}

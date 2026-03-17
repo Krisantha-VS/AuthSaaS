@@ -252,3 +252,98 @@ export async function updateRolePermissions(
   const json = await res.json();
   if (!json.success) throw new Error(json.error);
 }
+
+export async function deleteRole(token: string, roleId: string, appId: string): Promise<void> {
+  const res = await fetch(`${RBAC_BASE}/roles/${roleId}?appId=${appId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
+export async function deleteUser(token: string, userId: string, appId: string): Promise<void> {
+  const res = await fetch(`${RBAC_BASE}/users/${userId}?appId=${appId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
+// ─── Webhooks ─────────────────────────────────────────────────────────────────
+
+export interface WebhookInfo {
+  id: string;
+  appId: string;
+  url: string;
+  events: string[];
+  secret: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhookId: string;
+  event: string;
+  payload: unknown;
+  status: number;
+  response: string | null;
+  attempts: number;
+  deliveredAt: string | null;
+  createdAt: string;
+}
+
+export async function getWebhooks(token: string, appId: string): Promise<{ webhooks: WebhookInfo[]; availableEvents: string[] }> {
+  const res = await fetch(`${RBAC_BASE}/webhooks?appId=${appId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data;
+}
+
+export async function createWebhook(
+  token: string,
+  appId: string,
+  data: { url: string; events: string[] },
+): Promise<WebhookInfo> {
+  const res = await fetch(`${RBAC_BASE}/webhooks`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId, ...data }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.webhook;
+}
+
+export async function deleteWebhook(token: string, webhookId: string, appId: string): Promise<void> {
+  const res = await fetch(`${RBAC_BASE}/webhooks/${webhookId}?appId=${appId}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+}
+
+export async function toggleWebhook(token: string, webhookId: string, appId: string): Promise<WebhookInfo> {
+  const res = await fetch(`${RBAC_BASE}/webhooks/${webhookId}`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ appId }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.webhook;
+}
+
+export async function getWebhookDeliveries(token: string, webhookId: string, appId: string): Promise<WebhookDelivery[]> {
+  const res = await fetch(`${RBAC_BASE}/webhooks/${webhookId}/deliveries?appId=${appId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error);
+  return json.data.deliveries;
+}

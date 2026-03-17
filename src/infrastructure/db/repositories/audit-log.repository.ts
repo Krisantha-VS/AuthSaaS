@@ -56,4 +56,32 @@ export class AuditLogRepository implements IAuditLogRepository {
     });
     return records.map(mapRecord);
   }
+
+  async findFiltered(params: {
+    tenantId: string;
+    appId?: string;
+    userId?: string;
+    action?: string;
+    page: number;
+    limit: number;
+  }): Promise<{ logs: AuditLogEntity[]; total: number }> {
+    const where = {
+      tenantId: params.tenantId,
+      ...(params.appId  ? { appId:  params.appId  } : {}),
+      ...(params.userId ? { userId: params.userId } : {}),
+      ...(params.action ? { action: { contains: params.action } } : {}),
+    };
+
+    const [records, total] = await prisma.$transaction([
+      prisma.auditLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (params.page - 1) * params.limit,
+        take: params.limit,
+      }),
+      prisma.auditLog.count({ where }),
+    ]);
+
+    return { logs: records.map(mapRecord), total };
+  }
 }
