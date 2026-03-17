@@ -21,7 +21,8 @@ export function checkOrigin(
   // Localhost is never a real production origin — always allow for local dev/testing
   if (/^https?:\/\/localhost(:\d+)?$/.test(origin)) return null;
 
-  if (!allowedOrigins.includes(origin)) {
+  const normalizedOrigin = origin.replace(/\/$/, "");
+  if (!allowedOrigins.map(o => o.replace(/\/$/, "")).includes(normalizedOrigin)) {
     return NextResponse.json(
       { success: false, error: 'Origin not allowed', code: 'ORIGIN_FORBIDDEN' },
       { status: 403 },
