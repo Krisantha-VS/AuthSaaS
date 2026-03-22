@@ -54,9 +54,9 @@ export default function SettingsPage() {
             <label className="block text-xs font-medium text-zinc-500 mb-1.5">API Base URL</label>
             <div className="flex items-center gap-2">
               <code className="flex-1 px-3.5 py-2.5 bg-zinc-800 border border-white/[0.08] rounded-lg text-sm font-mono text-zinc-300">
-                https://auth-saas-rho.vercel.app/api/v1
+                {process.env.NEXT_PUBLIC_APP_URL}/api/v1
               </code>
-              <CopyBtn text="https://auth-saas-rho.vercel.app/api/v1" />
+              <CopyBtn text={`${process.env.NEXT_PUBLIC_APP_URL}/api/v1`} />
             </div>
           </div>
           <p className="text-xs text-zinc-600">Use this as the <code className="text-zinc-500">baseUrl</code> in your SDK config.</p>

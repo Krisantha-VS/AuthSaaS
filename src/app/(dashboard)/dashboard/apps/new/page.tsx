@@ -94,7 +94,7 @@ export default function NewAppPage() {
 {`// JS SDK
 const client = new AuthClient({
   clientId: "${secret.clientId}",
-  baseUrl:  "https://auth-saas-rho.vercel.app",
+  baseUrl:  "${process.env.NEXT_PUBLIC_APP_URL}",
 });
 
 await client.login({ email, password });`}
