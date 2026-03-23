@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) return;
+    if (!token) { setLoading(false); return; }
     Promise.all([getStats(token), getAuditLogs(token, 10)])
       .then(([s, l]) => { setStats(s); setLogs(l); })
       .finally(() => setLoading(false));

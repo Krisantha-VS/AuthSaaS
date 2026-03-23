@@ -21,6 +21,15 @@ const Ctx = createContext<AuthCtx | null>(null);
 
 const STORAGE_KEY = 'as_dashboard';
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload.exp ? Date.now() >= payload.exp * 1000 : false;
+  } catch {
+    return true; // malformed token — treat as expired
+  }
+}
+
 export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +38,14 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setSession(JSON.parse(raw));
+      if (raw) {
+        const parsed: Session = JSON.parse(raw);
+        if (parsed.tokens?.accessToken && !isTokenExpired(parsed.tokens.accessToken)) {
+          setSession(parsed);
+        } else {
+          localStorage.removeItem(STORAGE_KEY); // expired — force re-login
+        }
+      }
     } catch { /* ignore */ }
     setLoading(false);
   }, []);
