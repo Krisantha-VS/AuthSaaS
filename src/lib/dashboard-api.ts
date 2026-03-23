@@ -129,8 +129,9 @@ export function getStats(token: string) {
   return request<DashboardStats>('/stats', {}, token);
 }
 
-export function getAuditLogs(token: string, limit = 20) {
-  return request<AuditLog[]>(`/audit?limit=${limit}`, {}, token);
+export async function getAuditLogs(token: string, limit = 20): Promise<AuditLog[]> {
+  const data = await request<{ logs: AuditLog[]; total: number }>(`/audit?limit=${limit}`, {}, token);
+  return data.logs;
 }
 
 // ─── RBAC Types ───────────────────────────────────────────────────────────────
