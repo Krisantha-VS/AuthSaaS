@@ -1,7 +1,7 @@
 import { registerTenant } from '@/domain/services/tenant.service';
 import { tenantRegisterSchema } from '@/shared/lib/validators';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 
 // 5 registrations per hour per IP
 const WINDOW_MS = 60 * 60 * 1000;
@@ -9,9 +9,10 @@ const MAX_ATTEMPTS = 5;
 
 export async function POST(req: Request) {
   const ip = getIp(req);
-  if (!checkRateLimit(`tenant-register:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
+  const rl = await checkRateLimit(`tenant-register:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
     return err('Too many requests. Try again later.', 'RATE_LIMITED', 429,
-      { 'Retry-After': String(retryAfterSeconds(`tenant-register:${ip}`)) });
+      { 'Retry-After': String(rl.retryAfter) });
   }
 
   try {

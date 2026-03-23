@@ -20,4 +20,11 @@ export const config = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100,
   },
+  cookie: {
+    // Set to ".royalda.com" (with leading dot) to share cookies across subdomains.
+    // Leave unset for single-host deployments.
+    domain: process.env.COOKIE_DOMAIN as string | undefined,
+    secure: process.env.NODE_ENV === 'production',
+    refreshTtlSeconds: 7 * 24 * 60 * 60, // must match REFRESH_TOKEN_TTL_DAYS in auth.service
+  },
 } as const;

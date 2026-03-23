@@ -1,7 +1,7 @@
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
 import { forgotPasswordSchema } from '@/shared/lib/validators';
 import { forgotPassword } from '@/domain/services/auth.service';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { handlePreflight, withCors } from '@/shared/lib/cors';
 
 export async function OPTIONS(req: Request) {
@@ -11,9 +11,10 @@ export async function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   const ip = getIp(req);
-  if (!checkRateLimit(`forgot:${ip}`, 3, 15 * 60 * 1000)) {
+  const rl = await checkRateLimit(`forgot:${ip}`, 3, 15 * 60 * 1000);
+  if (!rl.allowed) {
     const res = err('Too many requests', 'RATE_LIMITED', 429, {
-      'Retry-After': String(retryAfterSeconds(`forgot:${ip}`)),
+      'Retry-After': String(rl.retryAfter),
     });
     return origin ? withCors(res, origin) : res;
   }

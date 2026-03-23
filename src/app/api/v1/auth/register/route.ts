@@ -1,9 +1,11 @@
 import { register } from '@/domain/services/auth.service';
 import { registerSchema } from '@/shared/lib/validators';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { checkOrigin, handlePreflight, withCors } from '@/shared/lib/cors';
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
+import { cookies } from 'next/headers';
+import { config } from '@/shared/config';
 
 const appRepo = new TenantAppRepository();
 
@@ -20,9 +22,10 @@ export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   let corsOrigin: string | null = null;
 
-  if (!checkRateLimit(`register:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
+  const rl = await checkRateLimit(`register:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
     return err('Too many requests. Try again later.', 'RATE_LIMITED', 429,
-      { 'Retry-After': String(retryAfterSeconds(`register:${ip}`)) });
+      { 'Retry-After': String(rl.retryAfter) });
   }
 
   try {
@@ -37,6 +40,17 @@ export async function POST(req: Request) {
     if (origin && app) corsOrigin = origin;
 
     const result = await register({ ...parsed.data, ipAddress: ip });
+
+    // Set refresh token as httpOnly cookie (browser clients)
+    const cookieStore = await cookies();
+    cookieStore.set('refresh_token', result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: config.cookie.secure,
+      sameSite: 'lax',
+      path: '/api/v1/auth',
+      maxAge: config.cookie.refreshTtlSeconds,
+      ...(config.cookie.domain ? { domain: config.cookie.domain } : {}),
+    });
 
     const res = ok({ user: result.user, tokens: result.tokens }, 201);
     return corsOrigin ? withCors(res, corsOrigin) : res;

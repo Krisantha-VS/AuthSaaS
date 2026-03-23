@@ -1,7 +1,7 @@
 import { loginTenant } from '@/domain/services/tenant.service';
 import { tenantLoginSchema } from '@/shared/lib/validators';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 
 // 10 attempts per 15 minutes per IP
 const WINDOW_MS = 15 * 60 * 1000;
@@ -9,9 +9,10 @@ const MAX_ATTEMPTS = 10;
 
 export async function POST(req: Request) {
   const ip = getIp(req);
-  if (!checkRateLimit(`tenant-login:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
+  const rl = await checkRateLimit(`tenant-login:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
     return err('Too many login attempts. Try again later.', 'RATE_LIMITED', 429,
-      { 'Retry-After': String(retryAfterSeconds(`tenant-login:${ip}`)) });
+      { 'Retry-After': String(rl.retryAfter) });
   }
 
   try {

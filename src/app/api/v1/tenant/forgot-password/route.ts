@@ -1,15 +1,16 @@
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
 import { forgotTenantPassword } from '@/domain/services/tenant.service';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { z } from 'zod';
 
 const schema = z.object({ email: z.string().email() });
 
 export async function POST(req: Request) {
   const ip = getIp(req);
-  if (!checkRateLimit(`tenant-forgot:${ip}`, 3, 15 * 60 * 1000)) {
+  const rl = await checkRateLimit(`tenant-forgot:${ip}`, 3, 15 * 60 * 1000);
+  if (!rl.allowed) {
     return err('Too many requests', 'RATE_LIMITED', 429, {
-      'Retry-After': String(retryAfterSeconds(`tenant-forgot:${ip}`)),
+      'Retry-After': String(rl.retryAfter),
     });
   }
 

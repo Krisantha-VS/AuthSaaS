@@ -3,6 +3,7 @@ import { refreshSchema } from '@/shared/lib/validators';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
 import { handlePreflight, withCors } from '@/shared/lib/cors';
 import { cookies } from 'next/headers';
+import { config } from '@/shared/config';
 
 export async function OPTIONS(req: Request) {
   return handlePreflight(req, ['*']) ?? new Response(null, { status: 204 });
@@ -24,6 +25,16 @@ export async function POST(req: Request) {
     if (!parsed.success) return err('Refresh token required', 'VALIDATION_ERROR', 401);
 
     const tokens = await refresh({ refreshToken: parsed.data.refreshToken, ipAddress: getIp(req) });
+
+    // Rotate the cookie alongside the token
+    cookieStore.set('refresh_token', tokens.refreshToken, {
+      httpOnly: true,
+      secure: config.cookie.secure,
+      sameSite: 'lax',
+      path: '/api/v1/auth',
+      maxAge: config.cookie.refreshTtlSeconds,
+      ...(config.cookie.domain ? { domain: config.cookie.domain } : {}),
+    });
 
     const res = ok(tokens);
     return origin ? withCors(res, origin) : res;

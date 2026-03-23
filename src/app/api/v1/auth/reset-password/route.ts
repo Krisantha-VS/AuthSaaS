@@ -1,7 +1,7 @@
 import { ok, err, handleError } from '@/shared/lib/api';
 import { resetPasswordSchema } from '@/shared/lib/validators';
 import { resetPassword } from '@/domain/services/auth.service';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { handlePreflight, withCors } from '@/shared/lib/cors';
 
 export async function OPTIONS(req: Request) {
@@ -18,9 +18,10 @@ export async function POST(req: Request) {
   }
 
   const key = `reset:${parsed.data.email}`;
-  if (!checkRateLimit(key, 5, 15 * 60 * 1000)) {
+  const rl = await checkRateLimit(key, 5, 15 * 60 * 1000);
+  if (!rl.allowed) {
     const res = err('Too many requests', 'RATE_LIMITED', 429, {
-      'Retry-After': String(retryAfterSeconds(key)),
+      'Retry-After': String(rl.retryAfter),
     });
     return origin ? withCors(res, origin) : res;
   }

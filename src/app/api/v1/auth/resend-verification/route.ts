@@ -1,6 +1,6 @@
 import { resendVerification } from '@/domain/services/auth.service';
 import { ok, err, handleError, getIp } from '@/shared/lib/api';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { z } from 'zod';
 import { handlePreflight, withCors } from '@/shared/lib/cors';
 
@@ -20,9 +20,10 @@ export async function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   const ip = getIp(req);
-  if (!checkRateLimit(`resend-verify:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
+  const rl = await checkRateLimit(`resend-verify:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
     const res = err('Too many requests. Try again later.', 'RATE_LIMITED', 429,
-      { 'Retry-After': String(retryAfterSeconds(`resend-verify:${ip}`)) });
+      { 'Retry-After': String(rl.retryAfter) });
     return origin ? withCors(res, origin) : res;
   }
 
@@ -34,8 +35,9 @@ export async function POST(req: Request) {
       return origin ? withCors(res, origin) : res;
     }
 
-    await resendVerification(parsed.data);
-    const res = ok({ message: 'Verification email sent.' });
+    // Always return success — never reveal whether email/account exists
+    try { await resendVerification(parsed.data); } catch { /* swallow */ }
+    const res = ok({ message: 'If that email is registered and unverified, a verification email has been sent.' });
     return origin ? withCors(res, origin) : res;
   } catch (e) {
     const res = handleError(e);

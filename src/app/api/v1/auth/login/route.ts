@@ -1,10 +1,12 @@
 import { login } from '@/domain/services/auth.service';
 import { loginSchema } from '@/shared/lib/validators';
 import { ok, handleError, err, getIp } from '@/shared/lib/api';
-import { checkRateLimit, retryAfterSeconds } from '@/shared/lib/rate-limit';
+import { checkRateLimit } from '@/shared/lib/rate-limit';
 import { isLockedOut, recordFailedAttempt, clearFailedAttempts, lockoutRemainingSeconds } from '@/shared/lib/lockout';
 import { checkOrigin, handlePreflight, withCors } from '@/shared/lib/cors';
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
+import { cookies } from 'next/headers';
+import { config } from '@/shared/config';
 
 const appRepo = new TenantAppRepository();
 
@@ -22,9 +24,10 @@ export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   let corsOrigin: string | null = null; // set after origin is validated against app
 
-  if (!checkRateLimit(`login:${ip}`, MAX_ATTEMPTS, WINDOW_MS)) {
+  const rl = await checkRateLimit(`login:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
+  if (!rl.allowed) {
     return err('Too many login attempts. Try again later.', 'RATE_LIMITED', 429,
-      { 'Retry-After': String(retryAfterSeconds(`login:${ip}`)) });
+      { 'Retry-After': String(rl.retryAfter) });
   }
 
   try {
@@ -34,12 +37,12 @@ export async function POST(req: Request) {
 
     // Per-account brute-force lockout check
     const lockoutKey = `${parsed.data.clientId}:${parsed.data.email}`;
-    if (isLockedOut(lockoutKey)) {
+    if (await isLockedOut(lockoutKey)) {
       return err(
         'Account temporarily locked. Too many failed attempts.',
         'ACCOUNT_LOCKED',
         429,
-        { 'Retry-After': String(lockoutRemainingSeconds(lockoutKey)) },
+        { 'Retry-After': String(await lockoutRemainingSeconds(lockoutKey)) },
       );
     }
 
@@ -56,13 +59,24 @@ export async function POST(req: Request) {
       result = await login({ ...parsed.data, ipAddress: ip });
     } catch (e) {
       if (e instanceof Error && e.message === 'INVALID_CREDENTIALS') {
-        recordFailedAttempt(lockoutKey);
+        await recordFailedAttempt(lockoutKey);
       }
       throw e;
     }
 
     // Successful login — clear any accumulated failures
-    clearFailedAttempts(lockoutKey);
+    await clearFailedAttempts(lockoutKey);
+
+    // Set refresh token as httpOnly cookie (browser clients)
+    const cookieStore = await cookies();
+    cookieStore.set('refresh_token', result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: config.cookie.secure,
+      sameSite: 'lax',
+      path: '/api/v1/auth',
+      maxAge: config.cookie.refreshTtlSeconds,
+      ...(config.cookie.domain ? { domain: config.cookie.domain } : {}),
+    });
 
     const res = ok(result);
     return corsOrigin ? withCors(res, corsOrigin) : res;

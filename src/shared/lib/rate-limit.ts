@@ -1,52 +1,44 @@
 /**
- * In-process sliding-window rate limiter.
+ * Distributed sliding-window rate limiter backed by Upstash Redis.
  *
- * Works per serverless instance (best-effort). For a distributed / multi-region
- * deployment upgrade to @upstash/ratelimit + Redis and swap the implementation here.
+ * Requires env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
+ * Get a free instance at https://upstash.com
  */
 
-interface Window {
-  count: number;
-  resetAt: number;
-}
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-const store = new Map<string, Window>();
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
 
-// Prune expired entries every 5 minutes to prevent unbounded memory growth
-let lastPrune = Date.now();
-function maybePrune() {
-  const now = Date.now();
-  if (now - lastPrune < 5 * 60 * 1000) return;
-  lastPrune = now;
-  for (const [k, v] of store) {
-    if (now > v.resetAt) store.delete(k);
+// Cache Ratelimit instances so we don't create one per request
+const limiters = new Map<string, Ratelimit>();
+
+function getLimiter(max: number, windowMs: number): Ratelimit {
+  const windowSec = Math.floor(windowMs / 1000);
+  const key = `${max}:${windowSec}`;
+  if (!limiters.has(key)) {
+    limiters.set(key, new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(max, `${windowSec} s`),
+      analytics: false,
+    }));
   }
+  return limiters.get(key)!;
 }
 
 /**
- * Returns true if the request is allowed, false if it should be blocked.
- * @param key      Unique identifier — e.g. `login:1.2.3.4` or `register:email@x.com`
- * @param max      Maximum hits allowed in the window
- * @param windowMs Window duration in milliseconds
+ * Check whether the request is within the rate limit.
+ * @returns `{ allowed: true }` or `{ allowed: false, retryAfter }` (seconds until reset)
  */
-export function checkRateLimit(key: string, max: number, windowMs: number): boolean {
-  maybePrune();
-  const now = Date.now();
-  const entry = store.get(key);
-
-  if (!entry || now > entry.resetAt) {
-    store.set(key, { count: 1, resetAt: now + windowMs });
-    return true;
-  }
-
-  if (entry.count >= max) return false;
-  entry.count++;
-  return true;
-}
-
-/** Returns seconds until the window resets (for Retry-After header). */
-export function retryAfterSeconds(key: string): number {
-  const entry = store.get(key);
-  if (!entry) return 0;
-  return Math.ceil(Math.max(0, entry.resetAt - Date.now()) / 1000);
+export async function checkRateLimit(
+  key: string,
+  max: number,
+  windowMs: number,
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  const { success, reset } = await getLimiter(max, windowMs).limit(key);
+  const retryAfter = success ? 0 : Math.ceil((reset - Date.now()) / 1000);
+  return { allowed: success, retryAfter };
 }
