@@ -1,44 +1,71 @@
 /**
- * Distributed sliding-window rate limiter backed by Upstash Redis.
+ * Sliding-window rate limiter.
  *
- * Requires env vars: UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN
- * Get a free instance at https://upstash.com
+ * Uses Upstash Redis when UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN are set
+ * (required for distributed / multi-instance deployments such as Vercel).
+ * Falls back to an in-process Map when those vars are absent (local dev).
  */
 
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+// ─── Upstash (distributed) ────────────────────────────────────────────────────
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+async function checkUpstash(
+  key: string,
+  max: number,
+  windowMs: number,
+): Promise<{ allowed: boolean; retryAfter: number }> {
+  const { Ratelimit } = await import('@upstash/ratelimit');
+  const { Redis }     = await import('@upstash/redis');
 
-// Cache Ratelimit instances so we don't create one per request
-const limiters = new Map<string, Ratelimit>();
+  const redis = new Redis({
+    url:   process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  });
 
-function getLimiter(max: number, windowMs: number): Ratelimit {
   const windowSec = Math.floor(windowMs / 1000);
-  const key = `${max}:${windowSec}`;
-  if (!limiters.has(key)) {
-    limiters.set(key, new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(max, `${windowSec} s`),
-      analytics: false,
-    }));
-  }
-  return limiters.get(key)!;
+  const limiter   = new Ratelimit({
+    redis,
+    limiter:   Ratelimit.slidingWindow(max, `${windowSec} s`),
+    analytics: false,
+  });
+
+  const { success, reset } = await limiter.limit(key);
+  const retryAfter = success ? 0 : Math.ceil((reset - Date.now()) / 1000);
+  return { allowed: success, retryAfter };
 }
 
-/**
- * Check whether the request is within the rate limit.
- * @returns `{ allowed: true }` or `{ allowed: false, retryAfter }` (seconds until reset)
- */
+// ─── In-memory fallback (single-instance / dev) ───────────────────────────────
+
+interface Window { count: number; resetAt: number }
+const store = new Map<string, Window>();
+
+function checkMemory(
+  key: string,
+  max: number,
+  windowMs: number,
+): { allowed: boolean; retryAfter: number } {
+  const now   = Date.now();
+  const entry = store.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    store.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, retryAfter: 0 };
+  }
+  if (entry.count >= max) {
+    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
+  }
+  entry.count++;
+  return { allowed: true, retryAfter: 0 };
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
 export async function checkRateLimit(
   key: string,
   max: number,
   windowMs: number,
 ): Promise<{ allowed: boolean; retryAfter: number }> {
-  const { success, reset } = await getLimiter(max, windowMs).limit(key);
-  const retryAfter = success ? 0 : Math.ceil((reset - Date.now()) / 1000);
-  return { allowed: success, retryAfter };
+  if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return checkUpstash(key, max, windowMs);
+  }
+  return checkMemory(key, max, windowMs);
 }
