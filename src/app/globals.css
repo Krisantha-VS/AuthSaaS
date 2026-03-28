@@ -1,32 +1,25 @@
 @import "tailwindcss";
 
+/* Class-based dark mode — ThemeProvider adds/removes .dark on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Tokens ───────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
+  --background: #f4f4f8;
   --foreground: #0f0f0f;
-  --muted: #f4f4f5;
+  --muted:      #ebebf0;
   --muted-foreground: #71717a;
-  --border: #e4e4e7;
-  --primary: #7c3aed;
+  --border:     #e4e4e7;
+  --primary:    #7c3aed;
 }
 
-.dark {
-  --background: #09090b;
+html.dark {
+  --background: #080810;
   --foreground: #fafafa;
-  --muted: #18181b;
+  --muted:      #18181b;
   --muted-foreground: #71717a;
-  --border: #27272a;
-  --primary: #8b5cf6;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #09090b;
-    --foreground: #fafafa;
-    --muted: #18181b;
-    --muted-foreground: #71717a;
-    --border: #27272a;
-    --primary: #8b5cf6;
-  }
+  --border:     #27272a;
+  --primary:    #8b5cf6;
 }
 
 @theme inline {
@@ -47,7 +40,115 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Prose styles for MDX content */
+/* ─── Aurora keyframes ─────────────────────────────────────── */
+@keyframes aurora-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(60px, -50px) scale(1.04); }
+  66%       { transform: translate(-30px, 40px) scale(0.97); }
+}
+@keyframes aurora-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-70px, 55px) scale(1.06); }
+  66%       { transform: translate(50px, -30px) scale(0.96); }
+}
+@keyframes aurora-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%       { transform: translate(55px, -65px) scale(1.05); }
+}
+
+/* ─── Glass utilities ──────────────────────────────────────── */
+
+/* Standard glass card — used on stat cards, panels, activity feed */
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 32px -4px rgba(0, 0, 0, 0.07),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.6);
+}
+html.dark .glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 32px -4px rgba(0, 0, 0, 0.4);
+}
+
+/* Auth card — for centered login/register forms */
+.glass-auth {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.90);
+  box-shadow: 0 8px 48px -8px rgba(0, 0, 0, 0.10),
+              inset 0 0 0 0.5px rgba(255, 255, 255, 0.7);
+}
+html.dark .glass-auth {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  box-shadow: 0 8px 48px -8px rgba(0, 0, 0, 0.5);
+}
+
+/* Sidebar */
+.glass-sidebar {
+  background: rgba(255, 255, 255, 0.80);
+  backdrop-filter: blur(32px) saturate(180%);
+  -webkit-backdrop-filter: blur(32px) saturate(180%);
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+}
+html.dark .glass-sidebar {
+  background: rgba(8, 8, 16, 0.90);
+  backdrop-filter: blur(32px) saturate(150%);
+  -webkit-backdrop-filter: blur(32px) saturate(150%);
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Mobile top bar */
+.glass-topbar {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+html.dark .glass-topbar {
+  background: rgba(8, 8, 16, 0.90);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Auth input fields */
+.auth-input {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  color: #0f0f0f;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.auth-input::placeholder { color: rgba(15, 15, 15, 0.36); }
+html.dark .auth-input {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fafafa;
+}
+html.dark .auth-input::placeholder { color: rgba(250, 250, 250, 0.28); }
+.auth-input:focus {
+  outline: none;
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+.auth-input.is-error,
+.auth-input.is-error:focus {
+  border-color: rgba(239, 68, 68, 0.50) !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08) !important;
+}
+.auth-input.is-valid {
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+/* ─── Prose / Docs ─────────────────────────────────────────── */
 .docs-prose h1 { @apply text-3xl font-bold tracking-tight mb-3; }
 .docs-prose h2 { @apply text-xl font-semibold mt-12 mb-4 scroll-mt-20; }
 .docs-prose h3 { @apply text-base font-semibold mt-8 mb-3 scroll-mt-20; }

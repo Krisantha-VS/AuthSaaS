@@ -6,8 +6,14 @@ import { DashboardProvider, useDashboardAuth } from '@/components/dashboard/prov
 import { DashboardSidebar } from '@/components/dashboard/sidebar';
 import { MobileHeader } from '@/components/dashboard/mobile-header';
 import { ToastProvider } from '@/components/dashboard/toast';
+import { AuroraBackground } from '@/components/aurora-background';
 
-const PUBLIC = ['/dashboard/login', '/dashboard/register'];
+const PUBLIC = [
+  '/dashboard/login',
+  '/dashboard/register',
+  '/dashboard/forgot-password',
+  '/dashboard/reset-password',
+];
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { session, loading } = useDashboardAuth();
@@ -17,29 +23,38 @@ function Guard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    const isPublic = PUBLIC.includes(pathname);
+    const isPublic = PUBLIC.some(p => pathname.startsWith(p));
     if (!session && !isPublic) router.replace('/dashboard/login');
     if (session  &&  isPublic) router.replace('/dashboard');
   }, [session, loading, pathname, router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
+        <AuroraBackground />
         <div className="w-6 h-6 border-2 border-violet-500/30 border-t-violet-500 rounded-full animate-spin" />
       </div>
     );
   }
 
-  const isPublic = PUBLIC.includes(pathname);
-  if (isPublic) return <>{children}</>;
-  if (!session)  return null;
+  const isPublic = PUBLIC.some(p => pathname.startsWith(p));
+  if (isPublic) {
+    return (
+      <>
+        <AuroraBackground />
+        {children}
+      </>
+    );
+  }
+  if (!session) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen text-zinc-900 dark:text-zinc-100">
+      <AuroraBackground />
       <MobileHeader onOpen={() => setSidebarOpen(true)} />
       <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="lg:pl-60 pt-14 lg:pt-0">
-        <main className="min-h-screen p-8">
+        <main className="min-h-screen p-6 lg:p-8">
           {children}
         </main>
       </div>

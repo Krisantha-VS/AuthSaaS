@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "cockroachdb"
 }
 
 model Tenant {
@@ -29,7 +29,7 @@ model TenantApp {
   description    String?
   clientId       String         @unique @default(cuid())
   secretHash     String
-  allowedOrigins String[]
+  allowedOrigins Json    @default("[]")
   isActive       Boolean        @default(true)
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -146,7 +146,7 @@ model Webhook {
   id         String            @id @default(cuid())
   appId      String
   url        String
-  events     String[]
+  events     Json     @default("[]")
   secret     String
   isActive   Boolean           @default(true)
   createdAt  DateTime          @default(now())

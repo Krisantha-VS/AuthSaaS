@@ -23,23 +23,31 @@ export interface WebhookDeliveryRecord {
 }
 
 export class WebhookRepository {
+  private castHook(h: Record<string, unknown>): WebhookRecord {
+    return { ...h, events: h.events as string[] } as WebhookRecord;
+  }
+
   async findByApp(appId: string): Promise<WebhookRecord[]> {
-    return prisma.webhook.findMany({
+    const hooks = await prisma.webhook.findMany({
       where: { appId },
       orderBy: { createdAt: 'desc' },
     });
+    return hooks.map(h => this.castHook(h as unknown as Record<string, unknown>));
   }
 
   async findById(id: string): Promise<WebhookRecord | null> {
-    return prisma.webhook.findUnique({ where: { id } });
+    const hook = await prisma.webhook.findUnique({ where: { id } });
+    return hook ? this.castHook(hook as unknown as Record<string, unknown>) : null;
   }
 
   async create(data: { appId: string; url: string; events: string[]; secret: string }): Promise<WebhookRecord> {
-    return prisma.webhook.create({ data });
+    const hook = await prisma.webhook.create({ data });
+    return this.castHook(hook as unknown as Record<string, unknown>);
   }
 
   async update(id: string, data: Partial<Pick<WebhookRecord, 'url' | 'events' | 'isActive'>>): Promise<WebhookRecord> {
-    return prisma.webhook.update({ where: { id }, data });
+    const hook = await prisma.webhook.update({ where: { id }, data });
+    return this.castHook(hook as unknown as Record<string, unknown>);
   }
 
   async delete(id: string): Promise<void> {
