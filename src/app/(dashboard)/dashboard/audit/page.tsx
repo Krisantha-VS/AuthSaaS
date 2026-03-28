@@ -34,23 +34,23 @@ export default function AuditPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Audit Log</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Audit Log</h1>
         <p className="text-zinc-400 text-sm mt-1">Immutable record of all authentication events across your apps.</p>
       </div>
 
-      <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-white/[0.06] flex items-center justify-between">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-zinc-200 dark:border-white/[0.06] flex items-center justify-between">
           <p className="text-xs text-zinc-500">Showing last {logs.length} events</p>
-          <span className="text-xs text-zinc-600">UTC timestamps</span>
+          <span className="text-xs text-zinc-400 dark:text-zinc-600">UTC timestamps</span>
         </div>
 
         {loading ? (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
             {[...Array(8)].map((_, i) => (
               <div key={i} className="flex items-center gap-4 px-5 py-4 animate-pulse">
-                <div className="w-24 h-5 bg-zinc-800 rounded" />
-                <div className="w-32 h-4 bg-zinc-800 rounded" />
-                <div className="flex-1 h-4 bg-zinc-800 rounded" />
+                <div className="w-24 h-5 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                <div className="w-32 h-4 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                <div className="flex-1 h-4 bg-zinc-200 dark:bg-zinc-800 rounded" />
               </div>
             ))}
           </div>
@@ -59,19 +59,19 @@ export default function AuditPage() {
             <p className="text-zinc-500 text-sm">No audit events yet.</p>
           </div>
         ) : (
-          <div className="divide-y divide-white/[0.04]">
+          <div className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
             {logs.map(log => {
               const meta = ACTION_META[log.action];
               return (
-                <div key={log.id} className="flex items-center gap-5 px-5 py-3.5 hover:bg-white/[0.02] transition-colors">
-                  <span className="text-xs text-zinc-600 font-mono w-32 flex-shrink-0">{fmt(log.createdAt)}</span>
-                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border flex-shrink-0 w-44 justify-center ${meta?.color ?? 'text-zinc-400 bg-zinc-800 border-white/[0.08]'}`}>
+                <div key={log.id} className="flex items-center gap-5 px-5 py-3.5 hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <span className="text-xs text-zinc-400 dark:text-zinc-600 font-mono w-32 flex-shrink-0">{fmt(log.createdAt)}</span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border flex-shrink-0 w-44 justify-center ${meta?.color ?? 'text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-white/[0.08]'}`}>
                     {meta?.label ?? log.action}
                   </span>
                   <span className="text-xs text-zinc-500 flex-shrink-0">{log.resource}</span>
-                  <span className="text-xs text-zinc-600 font-mono flex-1 truncate">{log.ipAddress ?? '—'}</span>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-600 font-mono flex-1 truncate">{log.ipAddress ?? '—'}</span>
                   {log.userId && (
-                    <span className="text-xs text-zinc-600 font-mono truncate max-w-[140px]" title={log.userId}>
+                    <span className="text-xs text-zinc-400 dark:text-zinc-600 font-mono truncate max-w-[140px]" title={log.userId}>
                       user:{log.userId.slice(0, 8)}…
                     </span>
                   )}

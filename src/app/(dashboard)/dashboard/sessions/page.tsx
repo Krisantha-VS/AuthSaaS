@@ -30,10 +30,10 @@ function SkeletonRows() {
   return (
     <>
       {[...Array(4)].map((_, i) => (
-        <tr key={i} className="border-b border-white/[0.04]">
+        <tr key={i} className="border-b border-zinc-100 dark:border-white/[0.04]">
           {[...Array(5)].map((_, j) => (
             <td key={j} className="px-4 py-3">
-              <div className="h-3.5 bg-zinc-800 rounded animate-pulse" style={{ width: j === 0 ? '96px' : j === 4 ? '56px' : '120px' }} />
+              <div className="h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded animate-pulse" style={{ width: j === 0 ? '96px' : j === 4 ? '56px' : '120px' }} />
             </td>
           ))}
         </tr>
@@ -105,19 +105,19 @@ export default function SessionsPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Sessions</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Sessions</h1>
           <p className="text-zinc-400 text-sm mt-1">View and revoke active user sessions for your applications.</p>
         </div>
 
         {/* App selector */}
         <div>
           {appsLoading ? (
-            <div className="w-44 h-9 bg-zinc-800 rounded-lg animate-pulse" />
+            <div className="w-44 h-9 bg-zinc-200 dark:bg-zinc-800 rounded-lg animate-pulse" />
           ) : (
             <select
               value={selectedAppId}
               onChange={e => setSelectedAppId(e.target.value)}
-              className="bg-zinc-900 border border-white/[0.08] text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
             >
               <option value="">Select an app…</option>
               {apps.map(app => (
@@ -130,7 +130,7 @@ export default function SessionsPage() {
 
       {/* No app selected */}
       {!selectedAppId ? (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-16 text-center">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-16 text-center">
           <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <rect x="2" y="4" width="20" height="14" rx="2"/>
@@ -140,11 +140,11 @@ export default function SessionsPage() {
           <p className="text-zinc-400 text-sm">Select an application to view its active sessions.</p>
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
           {/* Card header */}
-          <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
+          <div className="px-5 py-4 border-b border-zinc-200 dark:border-white/[0.06] flex items-center justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-white">Active Sessions</h2>
+              <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Active Sessions</h2>
               {selectedApp && (
                 <p className="text-xs text-zinc-500 mt-0.5">{selectedApp.name}</p>
               )}
@@ -152,7 +152,7 @@ export default function SessionsPage() {
             {!sessionsLoading && (
               <button
                 onClick={() => loadSessions(selectedAppId)}
-                className="text-xs text-zinc-500 hover:text-violet-400 border border-white/[0.06] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
+                className="text-xs text-zinc-500 hover:text-violet-400 border border-zinc-200 dark:border-white/[0.06] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                   <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -167,12 +167,12 @@ export default function SessionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-zinc-800/50">
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">User ID</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">App</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">Created</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400">Expires</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-zinc-400">Action</th>
+                <tr className="bg-zinc-50 dark:bg-zinc-800/50">
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">User ID</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">App</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">Created</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500">Expires</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-zinc-500">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -186,10 +186,10 @@ export default function SessionsPage() {
                   </tr>
                 ) : (
                   sessions.map(session => (
-                    <tr key={session.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+                    <tr key={session.id} className="border-b border-zinc-100 dark:border-white/[0.04] hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3">
                         <span
-                          className="font-mono text-xs text-zinc-300 bg-zinc-800 px-2 py-0.5 rounded"
+                          className="font-mono text-xs text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded"
                           title={session.userId}
                         >
                           {truncate(session.userId, 14)}

@@ -37,9 +37,9 @@ export default function NewAppPage() {
   if (secret) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
           {/* Success header */}
-          <div className="px-6 py-5 border-b border-white/[0.06] bg-emerald-500/5">
+          <div className="px-6 py-5 border-b border-zinc-200 dark:border-white/[0.06] bg-emerald-500/5">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center">
                 <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
@@ -47,8 +47,8 @@ export default function NewAppPage() {
                 </svg>
               </div>
               <div>
-                <h2 className="font-semibold text-white">Application created</h2>
-                <p className="text-xs text-zinc-400">Save your credentials — the secret is shown only once.</p>
+                <h2 className="font-semibold text-zinc-900 dark:text-white">Application created</h2>
+                <p className="text-xs text-zinc-500">Save your credentials — the secret is shown only once.</p>
               </div>
             </div>
           </div>
@@ -67,9 +67,9 @@ export default function NewAppPage() {
 
             {/* Client ID */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-2">Client ID</label>
+              <label className="block text-xs font-medium text-zinc-500 mb-2">Client ID</label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 px-3.5 py-2.5 bg-zinc-800 border border-white/[0.08] rounded-lg text-sm font-mono text-zinc-100">
+                <code className="flex-1 px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.08] rounded-lg text-sm font-mono text-zinc-800 dark:text-zinc-100">
                   {secret.clientId}
                 </code>
                 <CopyBtn text={secret.clientId} />
@@ -78,9 +78,9 @@ export default function NewAppPage() {
 
             {/* Client Secret */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-2">Client Secret <span className="text-amber-400">(one-time)</span></label>
+              <label className="block text-xs font-medium text-zinc-500 mb-2">Client Secret <span className="text-amber-400">(one-time)</span></label>
               <div className="flex items-center gap-2">
-                <code className="flex-1 px-3.5 py-2.5 bg-zinc-800 border border-amber-500/20 rounded-lg text-sm font-mono text-amber-300 break-all">
+                <code className="flex-1 px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-amber-500/20 rounded-lg text-sm font-mono text-amber-300 break-all">
                   {secret.clientSecret}
                 </code>
                 <CopyBtn text={secret.clientSecret} />
@@ -89,8 +89,8 @@ export default function NewAppPage() {
 
             {/* Usage snippet */}
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-2">Quick start</label>
-              <pre className="px-4 py-3.5 bg-zinc-950 border border-white/[0.06] rounded-lg text-xs font-mono text-zinc-300 overflow-x-auto">
+              <label className="block text-xs font-medium text-zinc-500 mb-2">Quick start</label>
+              <pre className="px-4 py-3.5 bg-zinc-100 dark:bg-zinc-950 border border-zinc-200 dark:border-white/[0.06] rounded-lg text-xs font-mono text-zinc-700 dark:text-zinc-300 overflow-x-auto">
 {`// JS SDK
 const client = new AuthClient({
   clientId: "${secret.clientId}",
@@ -116,43 +116,43 @@ await client.login({ email, password });`}
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <Link href="/dashboard/apps" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors flex items-center gap-1 mb-4">
+        <Link href="/dashboard/apps" className="text-xs text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors flex items-center gap-1 mb-4">
           ← Back to applications
         </Link>
-        <h1 className="text-2xl font-bold text-white">New application</h1>
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">New application</h1>
         <p className="text-zinc-400 text-sm mt-1">Each app gets a unique clientId to authenticate your users.</p>
       </div>
 
-      <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-6">
+      <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-6">
         <form onSubmit={submit} className="space-y-5">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Application name <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Application name <span className="text-red-400">*</span></label>
             <input
               required value={name} onChange={e => setName(e.target.value)}
               placeholder="My App"
-              className="w-full px-3.5 py-2.5 bg-zinc-800 border border-white/[0.1] rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
+              className="w-full px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.1] rounded-lg text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Description <span className="text-zinc-600">(optional)</span></label>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Description <span className="text-zinc-400 dark:text-zinc-600">(optional)</span></label>
             <input
               value={desc} onChange={e => setDesc(e.target.value)}
               placeholder="What does this app do?"
-              className="w-full px-3.5 py-2.5 bg-zinc-800 border border-white/[0.1] rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
+              className="w-full px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.1] rounded-lg text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">
-              Allowed origins <span className="text-zinc-600">(comma-separated, optional)</span>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">
+              Allowed origins <span className="text-zinc-400 dark:text-zinc-600">(comma-separated, optional)</span>
             </label>
             <input
               value={origins} onChange={e => setOrigins(e.target.value)}
               placeholder="https://myapp.com, http://localhost:3000"
-              className="w-full px-3.5 py-2.5 bg-zinc-800 border border-white/[0.1] rounded-lg text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
+              className="w-full px-3.5 py-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.1] rounded-lg text-sm text-zinc-800 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-violet-500/60 focus:ring-1 focus:ring-violet-500/30 transition-all"
             />
-            <p className="text-xs text-zinc-600 mt-1.5">Leave empty to allow all origins during development.</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1.5">Leave empty to allow all origins during development.</p>
           </div>
 
           <div className="flex items-center gap-3 pt-2">
@@ -165,7 +165,7 @@ await client.login({ email, password });`}
             </button>
             <Link
               href="/dashboard/apps"
-              className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-medium rounded-lg transition-colors"
+              className="px-4 py-2.5 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-sm font-medium rounded-lg transition-colors"
             >
               Cancel
             </Link>

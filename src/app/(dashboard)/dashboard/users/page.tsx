@@ -43,17 +43,17 @@ function SkeletonRows() {
         <tr key={i} className="animate-pulse">
           <td className="px-5 py-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-zinc-800" />
+              <div className="w-8 h-8 rounded-full bg-zinc-200 dark:bg-zinc-800" />
               <div className="space-y-1.5">
-                <div className="w-28 h-3.5 bg-zinc-800 rounded" />
-                <div className="w-40 h-3 bg-zinc-800 rounded" />
+                <div className="w-28 h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded" />
+                <div className="w-40 h-3 bg-zinc-200 dark:bg-zinc-800 rounded" />
               </div>
             </div>
           </td>
-          <td className="px-5 py-4"><div className="w-20 h-5 bg-zinc-800 rounded-full" /></td>
-          <td className="px-5 py-4"><div className="w-12 h-5 bg-zinc-800 rounded-full" /></td>
-          <td className="px-5 py-4"><div className="w-16 h-6 bg-zinc-800 rounded-full" /></td>
-          <td className="px-5 py-4"><div className="w-14 h-6 bg-zinc-800 rounded-lg" /></td>
+          <td className="px-5 py-4"><div className="w-20 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full" /></td>
+          <td className="px-5 py-4"><div className="w-12 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full" /></td>
+          <td className="px-5 py-4"><div className="w-16 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-full" /></td>
+          <td className="px-5 py-4"><div className="w-14 h-6 bg-zinc-200 dark:bg-zinc-800 rounded-lg" /></td>
         </tr>
       ))}
     </>
@@ -110,7 +110,7 @@ function ManageRow({ user, roles, token, appId, onUpdate }: ManageRowProps) {
 
   return (
     <tr>
-      <td colSpan={5} className="px-5 py-4 bg-zinc-800/40 border-b border-white/[0.04]">
+      <td colSpan={5} className="px-5 py-4 bg-zinc-50 dark:bg-zinc-800/40 border-b border-zinc-100 dark:border-white/[0.04]">
         <div className="flex flex-col gap-4 max-w-2xl">
           <div>
             <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-2">Roles</p>
@@ -124,7 +124,7 @@ function ManageRow({ user, roles, token, appId, onUpdate }: ManageRowProps) {
                     className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
                       assigned
                         ? roleBadgeClass(role.name)
-                        : 'bg-transparent text-zinc-500 border-white/[0.10] hover:border-zinc-500'
+                        : 'bg-transparent text-zinc-500 border-zinc-200 dark:border-white/[0.10] hover:border-zinc-400 dark:hover:border-zinc-500'
                     }`}
                   >
                     {role.name}
@@ -132,7 +132,7 @@ function ManageRow({ user, roles, token, appId, onUpdate }: ManageRowProps) {
                 );
               })}
               {roles.length === 0 && (
-                <p className="text-xs text-zinc-600">No roles defined for this app yet.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-600">No roles defined for this app yet.</p>
               )}
             </div>
           </div>
@@ -226,19 +226,19 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Users</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Users</h1>
           <p className="text-zinc-400 text-sm mt-1">Manage your app&apos;s users and roles.</p>
         </div>
 
         {/* App selector */}
         <div className="flex items-center gap-2">
           {appsLoading ? (
-            <div className="w-44 h-9 bg-zinc-800 rounded-lg animate-pulse" />
+            <div className="w-44 h-9 bg-zinc-200 dark:bg-zinc-800 rounded-lg animate-pulse" />
           ) : (
             <select
               value={selectedAppId}
               onChange={e => setSelectedAppId(e.target.value)}
-              className="bg-zinc-900 border border-white/[0.08] text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
             >
               <option value="">Select an app…</option>
               {apps.map(app => (
@@ -251,7 +251,7 @@ export default function UsersPage() {
 
       {/* No app selected */}
       {!selectedAppId ? (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-16 text-center">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-16 text-center">
           <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -266,16 +266,16 @@ export default function UsersPage() {
           {/* Stats row */}
           {!usersLoading && (
             <div className="flex items-center gap-3 mb-6">
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-white/[0.06] rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-lg">
                 <span className="text-xs text-zinc-500">Total</span>
-                <span className="text-sm font-semibold text-white">{totalUsers}</span>
+                <span className="text-sm font-semibold text-zinc-900 dark:text-white">{totalUsers}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-white/[0.06] rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-lg">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                 <span className="text-xs text-zinc-500">Active</span>
                 <span className="text-sm font-semibold text-emerald-400">{activeUsers}</span>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-900 border border-white/[0.06] rounded-lg">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-lg">
                 <span className="text-xs text-zinc-500">Verified</span>
                 <span className="text-sm font-semibold text-blue-400">{verifiedUsers}</span>
               </div>
@@ -283,10 +283,10 @@ export default function UsersPage() {
           )}
 
           {/* Table */}
-          <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.06]">
+                <tr className="border-b border-zinc-200 dark:border-white/[0.06]">
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">User</th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">Roles</th>
                   <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">Verified</th>
@@ -294,7 +294,7 @@ export default function UsersPage() {
                   <th className="px-5 py-3.5" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/[0.04]">
+              <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
                 {usersLoading ? (
                   <SkeletonRows />
                 ) : users.length === 0 ? (
@@ -308,7 +308,7 @@ export default function UsersPage() {
                     <>
                       <tr
                         key={user.id}
-                        className="group hover:bg-white/[0.02] transition-colors"
+                        className="group hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors"
                       >
                         {/* Avatar + Name/Email */}
                         <td className="px-5 py-4">
@@ -316,9 +316,9 @@ export default function UsersPage() {
                             <Avatar name={user.name ?? undefined} email={user.email} />
                             <div>
                               {user.name && (
-                                <p className="text-sm font-medium text-zinc-100">{user.name}</p>
+                                <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{user.name}</p>
                               )}
-                              <p className={`text-xs ${user.name ? 'text-zinc-500' : 'text-zinc-200 text-sm font-medium'}`}>
+                              <p className={`text-xs ${user.name ? 'text-zinc-500' : 'text-zinc-700 dark:text-zinc-200 text-sm font-medium'}`}>
                                 {user.email}
                               </p>
                             </div>
@@ -329,7 +329,7 @@ export default function UsersPage() {
                         <td className="px-5 py-4">
                           <div className="flex flex-wrap gap-1.5">
                             {user.roles.length === 0 ? (
-                              <span className="text-xs text-zinc-600">—</span>
+                              <span className="text-xs text-zinc-400 dark:text-zinc-600">—</span>
                             ) : (
                               user.roles.map(role => (
                                 <span
@@ -350,7 +350,7 @@ export default function UsersPage() {
                               <path d="m5 13 4 4L19 7" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                           ) : (
-                            <span className="text-zinc-600 text-sm">—</span>
+                            <span className="text-zinc-400 dark:text-zinc-600 text-sm">—</span>
                           )}
                         </td>
 
@@ -359,7 +359,7 @@ export default function UsersPage() {
                           <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
                             user.isActive
                               ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                              : 'bg-zinc-800 text-zinc-400 border-white/[0.06]'
+                              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-white/[0.06]'
                           }`}>
                             <span className={`w-1.5 h-1.5 rounded-full ${user.isActive ? 'bg-emerald-400' : 'bg-zinc-500'}`} />
                             {user.isActive ? 'Active' : 'Inactive'}
@@ -373,7 +373,7 @@ export default function UsersPage() {
                             className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
                               expandedUserId === user.id
                                 ? 'bg-violet-600/20 text-violet-300 border-violet-500/30'
-                                : 'text-zinc-400 border-white/[0.08] hover:text-zinc-100 hover:border-zinc-600'
+                                : 'text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-white/[0.08] hover:text-zinc-800 dark:hover:text-zinc-100 hover:border-zinc-400 dark:hover:border-zinc-600'
                             }`}
                           >
                             {expandedUserId === user.id ? 'Close' : 'Manage'}

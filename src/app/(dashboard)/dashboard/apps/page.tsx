@@ -32,7 +32,7 @@ export default function AppsPage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-white">Applications</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Applications</h1>
           <p className="text-zinc-400 text-sm mt-1">Manage your tenant apps and integration keys.</p>
         </div>
         <Link
@@ -49,17 +49,17 @@ export default function AppsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-20 bg-zinc-900 rounded-xl animate-pulse border border-white/[0.06]" />
+            <div key={i} className="h-20 bg-white dark:bg-zinc-900 rounded-xl animate-pulse border border-zinc-200 dark:border-white/[0.06]" />
           ))}
         </div>
       ) : apps.length === 0 ? (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-16 text-center">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-16 text-center">
           <div className="w-14 h-14 bg-violet-500/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-7 h-7 text-violet-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
             </svg>
           </div>
-          <h3 className="text-lg font-semibold text-white mb-2">No applications yet</h3>
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">No applications yet</h3>
           <p className="text-sm text-zinc-400 mb-6">Create your first app to get a clientId and start integrating.</p>
           <Link
             href="/dashboard/apps/new"
@@ -69,10 +69,10 @@ export default function AppsPage() {
           </Link>
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-white/[0.06]">
+              <tr className="border-b border-zinc-200 dark:border-white/[0.06]">
                 <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">App</th>
                 <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">Client ID</th>
                 <th className="text-left text-xs font-medium text-zinc-500 uppercase tracking-wider px-5 py-3.5">Status</th>
@@ -80,23 +80,23 @@ export default function AppsPage() {
                 <th className="px-5 py-3.5" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/[0.04]">
+            <tbody className="divide-y divide-zinc-100 dark:divide-white/[0.04]">
               {apps.map(app => (
-                <tr key={app.id} className="group hover:bg-white/[0.02] transition-colors">
+                <tr key={app.id} className="group hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
                         <span className="text-xs font-bold text-violet-400">{app.name[0]}</span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-zinc-100">{app.name}</p>
+                        <p className="text-sm font-medium text-zinc-800 dark:text-zinc-100">{app.name}</p>
                         {app.description && <p className="text-xs text-zinc-500 truncate max-w-[200px]">{app.description}</p>}
                       </div>
                     </div>
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-2">
-                      <code className="text-xs text-zinc-300 font-mono bg-zinc-800 px-2 py-1 rounded border border-white/[0.06] max-w-[160px] truncate block">
+                      <code className="text-xs text-zinc-600 dark:text-zinc-300 font-mono bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded border border-zinc-200 dark:border-white/[0.06] max-w-[160px] truncate block">
                         {app.clientId}
                       </code>
                       <CopyBtn text={app.clientId} />
@@ -109,7 +109,7 @@ export default function AppsPage() {
                       className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-all ${
                         app.isActive
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                          : 'bg-zinc-800 text-zinc-400 border-white/[0.06] hover:bg-zinc-700'
+                          : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border-zinc-200 dark:border-white/[0.06] hover:bg-zinc-200 dark:hover:bg-zinc-700'
                       }`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${app.isActive ? 'bg-emerald-400' : 'bg-zinc-500'}`} />

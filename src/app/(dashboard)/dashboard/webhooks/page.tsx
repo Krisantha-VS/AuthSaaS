@@ -17,7 +17,7 @@ import {
 
 function StatusDot({ ok }: { ok: boolean }) {
   return (
-    <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+    <span className={`inline-block w-2 h-2 rounded-full ${ok ? 'bg-emerald-400' : 'bg-zinc-400 dark:bg-zinc-600'}`} />
   );
 }
 
@@ -34,7 +34,7 @@ function SkeletonRows() {
   return (
     <>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="h-16 rounded-xl bg-zinc-800/40 animate-pulse" />
+        <div key={i} className="h-16 rounded-xl bg-zinc-200/40 dark:bg-zinc-800/40 animate-pulse" />
       ))}
     </>
   );
@@ -159,7 +159,7 @@ export default function WebhooksPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-white">Webhooks</h1>
+          <h1 className="text-xl font-semibold text-zinc-900 dark:text-white">Webhooks</h1>
           <p className="text-sm text-zinc-400 mt-0.5">
             Receive real-time events when users register, login, or take actions.
           </p>
@@ -179,11 +179,11 @@ export default function WebhooksPage() {
       {/* App selector */}
       {apps.length > 1 && (
         <div className="mb-5">
-          <label className="text-xs text-zinc-400 block mb-1.5">Application</label>
+          <label className="text-xs text-zinc-500 block mb-1.5">Application</label>
           <select
             value={selectedApp}
             onChange={e => setSelectedApp(e.target.value)}
-            className="bg-zinc-900 border border-white/[0.08] text-zinc-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-violet-500/50 w-full sm:w-auto"
+            className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-violet-500/50 w-full sm:w-auto"
           >
             {apps.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
           </select>
@@ -192,22 +192,22 @@ export default function WebhooksPage() {
 
       {/* Create form */}
       {showForm && (
-        <div className="mb-6 p-5 bg-zinc-900 border border-white/[0.06] rounded-xl space-y-4">
-          <h2 className="text-sm font-semibold text-white">Create webhook — {selectedAppName}</h2>
+        <div className="mb-6 p-5 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Create webhook — {selectedAppName}</h2>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-1.5">Endpoint URL</label>
+            <label className="text-xs text-zinc-500 block mb-1.5">Endpoint URL</label>
             <input
               type="url"
               value={newUrl}
               onChange={e => setNewUrl(e.target.value)}
               placeholder="https://your-app.com/webhooks/authsaas"
-              className="w-full bg-zinc-800 border border-white/[0.08] text-zinc-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-violet-500/50 placeholder-zinc-600"
+              className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-100 text-sm rounded-lg px-3 py-2 outline-none focus:border-violet-500/50 placeholder-zinc-400 dark:placeholder-zinc-600"
             />
           </div>
 
           <div>
-            <label className="text-xs text-zinc-400 block mb-2">Events to subscribe</label>
+            <label className="text-xs text-zinc-500 block mb-2">Events to subscribe</label>
             <div className="flex flex-wrap gap-2">
               {events.map(ev => (
                 <button
@@ -217,7 +217,7 @@ export default function WebhooksPage() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-colors ${
                     newEvents.has(ev)
                       ? 'bg-violet-600/20 border-violet-500/40 text-violet-300'
-                      : 'bg-zinc-800 border-white/[0.06] text-zinc-400 hover:text-zinc-200'
+                      : 'bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-white/[0.06] text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200'
                   }`}
                 >
                   {ev}
@@ -236,7 +236,7 @@ export default function WebhooksPage() {
             </button>
             <button
               onClick={() => { setShowForm(false); setNewUrl(''); setNewEvents(new Set()); }}
-              className="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm transition-colors"
+              className="px-4 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 text-sm transition-colors"
             >
               Cancel
             </button>
@@ -249,33 +249,33 @@ export default function WebhooksPage() {
         {loading ? (
           <SkeletonRows />
         ) : webhooks.length === 0 ? (
-          <div className="text-center py-16 text-zinc-500 text-sm">
+          <div className="text-center py-16 text-zinc-400 dark:text-zinc-500 text-sm">
             No webhooks yet — create one to start receiving events.
           </div>
         ) : (
           webhooks.map(hook => (
-            <div key={hook.id} className="bg-zinc-900 border border-white/[0.06] rounded-xl p-4">
+            <div key={hook.id} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-1">
                   <StatusDot ok={hook.isActive} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-zinc-100 font-mono truncate">{hook.url}</p>
+                  <p className="text-sm text-zinc-800 dark:text-zinc-100 font-mono truncate">{hook.url}</p>
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {hook.events.map(ev => (
-                      <span key={ev} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 text-xs font-mono border border-white/[0.06]">
+                      <span key={ev} className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 text-xs font-mono border border-zinc-200 dark:border-white/[0.06]">
                         {ev}
                       </span>
                     ))}
                   </div>
-                  <p className="text-xs text-zinc-600 mt-1.5 font-mono">
+                  <p className="text-xs text-zinc-400 dark:text-zinc-600 mt-1.5 font-mono">
                     secret: {hook.secret}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <button
                     onClick={() => openDeliveries(hook)}
-                    className="px-3 py-1.5 text-xs rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+                    className="px-3 py-1.5 text-xs rounded-lg bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 transition-colors"
                   >
                     Deliveries
                   </button>
@@ -283,7 +283,7 @@ export default function WebhooksPage() {
                     onClick={() => handleToggle(hook)}
                     className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                       hook.isActive
-                        ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400'
+                        ? 'bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 dark:text-zinc-400'
                         : 'bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400'
                     }`}
                   >
@@ -306,13 +306,13 @@ export default function WebhooksPage() {
       {drawerHook && (
         <div className="fixed inset-0 z-50 flex justify-end">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDrawerHook(null)} />
-          <div className="relative w-full max-w-lg bg-zinc-950 border-l border-white/[0.06] flex flex-col h-full overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <div className="relative w-full max-w-lg bg-white dark:bg-zinc-950 border-l border-zinc-200 dark:border-white/[0.06] flex flex-col h-full overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-white/[0.06]">
               <div>
-                <p className="text-sm font-semibold text-white">Delivery log</p>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white">Delivery log</p>
                 <p className="text-xs text-zinc-500 font-mono mt-0.5 truncate max-w-xs">{drawerHook.url}</p>
               </div>
-              <button onClick={() => setDrawerHook(null)} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+              <button onClick={() => setDrawerHook(null)} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
                   <path d="M18 6L6 18M6 6l12 12"/>
                 </svg>
@@ -322,18 +322,18 @@ export default function WebhooksPage() {
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {deliveriesLoading ? (
                 <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-zinc-800/40 animate-pulse" />)}
+                  {[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-lg bg-zinc-200/40 dark:bg-zinc-800/40 animate-pulse" />)}
                 </div>
               ) : deliveries.length === 0 ? (
-                <p className="text-center text-zinc-500 text-sm py-12">No deliveries yet.</p>
+                <p className="text-center text-zinc-400 dark:text-zinc-500 text-sm py-12">No deliveries yet.</p>
               ) : (
                 deliveries.map(d => (
-                  <div key={d.id} className="bg-zinc-900 border border-white/[0.06] rounded-lg p-3">
+                  <div key={d.id} className="bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-lg p-3">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-mono text-zinc-300">{d.event}</span>
+                      <span className="text-xs font-mono text-zinc-700 dark:text-zinc-300">{d.event}</span>
                       <div className="flex items-center gap-2">
                         <DeliveryStatusBadge status={d.status} />
-                        <span className="text-xs text-zinc-600">
+                        <span className="text-xs text-zinc-400 dark:text-zinc-600">
                           {new Date(d.createdAt).toLocaleTimeString()}
                         </span>
                       </div>

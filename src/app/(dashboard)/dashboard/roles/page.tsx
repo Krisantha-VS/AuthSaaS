@@ -36,7 +36,7 @@ function isDefaultRole(name: string) {
 }
 
 function roleChipClass(name: string) {
-  if (isDefaultRole(name)) return 'bg-zinc-700/60 text-zinc-400 border-white/[0.08]';
+  if (isDefaultRole(name)) return 'bg-zinc-200/60 dark:bg-zinc-700/60 text-zinc-500 dark:text-zinc-400 border-zinc-300 dark:border-white/[0.08]';
   return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25';
 }
 
@@ -44,10 +44,10 @@ function roleChipClass(name: string) {
 function PermBadge({ perm }: { perm: string }) {
   const [action, resource] = perm.split(':');
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-zinc-800 border border-white/[0.06] rounded text-xs">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.06] rounded text-xs">
       <span className="text-zinc-500">{action}</span>
-      <span className="text-zinc-600">·</span>
-      <span className="text-zinc-200">{resource}</span>
+      <span className="text-zinc-400 dark:text-zinc-600">·</span>
+      <span className="text-zinc-700 dark:text-zinc-200">{resource}</span>
     </span>
   );
 }
@@ -58,15 +58,15 @@ function SkeletonCards() {
   return (
     <>
       {[...Array(3)].map((_, i) => (
-        <div key={i} className="bg-zinc-900 border border-white/[0.06] rounded-xl p-5 animate-pulse space-y-3">
+        <div key={i} className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-5 animate-pulse space-y-3">
           <div className="flex items-center justify-between">
-            <div className="w-24 h-5 bg-zinc-800 rounded" />
-            <div className="w-14 h-5 bg-zinc-800 rounded-full" />
+            <div className="w-24 h-5 bg-zinc-200 dark:bg-zinc-800 rounded" />
+            <div className="w-14 h-5 bg-zinc-200 dark:bg-zinc-800 rounded-full" />
           </div>
-          <div className="w-48 h-3.5 bg-zinc-800 rounded" />
+          <div className="w-48 h-3.5 bg-zinc-200 dark:bg-zinc-800 rounded" />
           <div className="flex gap-2 flex-wrap">
             {[...Array(4)].map((_, j) => (
-              <div key={j} className="w-20 h-5 bg-zinc-800 rounded" />
+              <div key={j} className="w-20 h-5 bg-zinc-200 dark:bg-zinc-800 rounded" />
             ))}
           </div>
         </div>
@@ -93,7 +93,7 @@ function PermChecklist({ selected, onChange }: PermChecklistProps) {
     <div className="space-y-3">
       {Object.entries(PERMISSIONS_CATALOG).map(([resource, actions]) => (
         <div key={resource}>
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-1.5">{resource}</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-600 mb-1.5">{resource}</p>
           <div className="flex flex-wrap gap-2">
             {actions.map(action => {
               const perm = `${action}:${resource}`;
@@ -106,7 +106,7 @@ function PermChecklist({ selected, onChange }: PermChecklistProps) {
                   className={`inline-flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium border transition-all ${
                     checked
                       ? 'bg-violet-500/15 text-violet-300 border-violet-500/30'
-                      : 'bg-zinc-800/50 text-zinc-500 border-white/[0.06] hover:border-zinc-600 hover:text-zinc-300'
+                      : 'bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500 border-zinc-200 dark:border-white/[0.06] hover:border-zinc-400 dark:hover:border-zinc-600 hover:text-zinc-700 dark:hover:text-zinc-300'
                   }`}
                 >
                   {checked && (
@@ -157,10 +157,10 @@ function CreateRoleForm({ token, appId, onCreated, onCancel }: CreateRoleFormPro
   };
 
   return (
-    <div className="bg-zinc-900 border border-violet-500/20 rounded-xl p-5 mb-6">
+    <div className="bg-white dark:bg-zinc-900 border border-violet-500/20 rounded-xl p-5 mb-6">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-sm font-semibold text-white">Create new role</h2>
-        <button onClick={onCancel} className="text-zinc-500 hover:text-zinc-200 transition-colors">
+        <h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Create new role</h2>
+        <button onClick={onCancel} className="text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -170,30 +170,30 @@ function CreateRoleForm({ token, appId, onCreated, onCancel }: CreateRoleFormPro
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Role name <span className="text-red-400">*</span></label>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Role name <span className="text-red-400">*</span></label>
             <input
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. moderator"
-              className="w-full bg-zinc-800 border border-white/[0.08] text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 placeholder-zinc-600"
+              className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 placeholder-zinc-400 dark:placeholder-zinc-600"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1.5">Description</label>
+            <label className="block text-xs font-medium text-zinc-500 mb-1.5">Description</label>
             <input
               type="text"
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="Optional description"
-              className="w-full bg-zinc-800 border border-white/[0.08] text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 placeholder-zinc-600"
+              className="w-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-white/[0.08] text-zinc-800 dark:text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 placeholder-zinc-400 dark:placeholder-zinc-600"
             />
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-zinc-400 mb-2">Permissions</label>
+          <label className="block text-xs font-medium text-zinc-500 mb-2">Permissions</label>
           <PermChecklist selected={perms} onChange={setPerms} />
         </div>
 
@@ -208,7 +208,7 @@ function CreateRoleForm({ token, appId, onCreated, onCancel }: CreateRoleFormPro
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
+            className="px-4 py-2 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100 transition-colors"
           >
             Cancel
           </button>
@@ -259,16 +259,16 @@ function RoleCard({ role, token, appId, onUpdated }: RoleCardProps) {
   };
 
   return (
-    <div className="bg-zinc-900 border border-white/[0.06] rounded-xl overflow-hidden transition-all">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl overflow-hidden transition-all">
       {/* Card header */}
       <button
         onClick={() => { setExpanded(e => !e); setEditingPerms(false); }}
-        className="w-full text-left px-5 py-4 hover:bg-white/[0.02] transition-colors"
+        className="w-full text-left px-5 py-4 hover:bg-zinc-50 dark:hover:bg-white/[0.02] transition-colors"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-base font-semibold text-zinc-100 capitalize">{role.name}</span>
+              <span className="text-base font-semibold text-zinc-800 dark:text-zinc-100 capitalize">{role.name}</span>
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${roleChipClass(role.name)}`}>
                 {isDefault ? 'Default' : 'Custom'}
               </span>
@@ -279,9 +279,9 @@ function RoleCard({ role, token, appId, onUpdated }: RoleCardProps) {
           </div>
           <div className="flex items-center gap-3 flex-shrink-0">
             <span className="text-xs text-zinc-500">{role.userCount} user{role.userCount !== 1 ? 's' : ''}</span>
-            <span className="text-xs text-zinc-600">{role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs text-zinc-400 dark:text-zinc-600">{role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''}</span>
             <svg
-              className={`w-4 h-4 text-zinc-600 transition-transform ${expanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 text-zinc-400 dark:text-zinc-600 transition-transform ${expanded ? 'rotate-180' : ''}`}
               fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"
             >
               <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round"/>
@@ -292,17 +292,17 @@ function RoleCard({ role, token, appId, onUpdated }: RoleCardProps) {
 
       {/* Expanded body */}
       {expanded && (
-        <div className="border-t border-white/[0.06] px-5 py-4 space-y-4">
+        <div className="border-t border-zinc-200 dark:border-white/[0.06] px-5 py-4 space-y-4">
           {!editingPerms ? (
             <>
               {/* Permission display */}
               {role.permissions.length === 0 ? (
-                <p className="text-xs text-zinc-600">No permissions assigned.</p>
+                <p className="text-xs text-zinc-400 dark:text-zinc-600">No permissions assigned.</p>
               ) : (
                 <div className="space-y-2">
                   {Object.entries(grouped).map(([resource, actions]) => (
                     <div key={resource} className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 w-16 flex-shrink-0">{resource}</span>
+                      <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-600 w-16 flex-shrink-0">{resource}</span>
                       {actions.map(action => (
                         <PermBadge key={`${action}:${resource}`} perm={`${action}:${resource}`} />
                       ))}
@@ -315,7 +315,7 @@ function RoleCard({ role, token, appId, onUpdated }: RoleCardProps) {
               {!isDefault && (
                 <button
                   onClick={e => { e.stopPropagation(); setDraftPerms(role.permissions); setEditingPerms(true); }}
-                  className="text-xs text-zinc-500 hover:text-violet-400 border border-white/[0.06] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all"
+                  className="text-xs text-zinc-500 hover:text-violet-400 border border-zinc-200 dark:border-white/[0.06] hover:border-violet-500/30 px-3 py-1.5 rounded-lg transition-all"
                 >
                   Edit permissions
                 </button>
@@ -334,7 +334,7 @@ function RoleCard({ role, token, appId, onUpdated }: RoleCardProps) {
                 </button>
                 <button
                   onClick={() => setEditingPerms(false)}
-                  className="text-xs text-zinc-400 hover:text-zinc-100 transition-colors"
+                  className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-100 transition-colors"
                 >
                   Cancel
                 </button>
@@ -403,18 +403,18 @@ export default function RolesPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">Roles</h1>
+          <h1 className="text-2xl font-bold text-zinc-900 dark:text-white">Roles</h1>
           <p className="text-zinc-400 text-sm mt-1">Define roles and permissions for your app&apos;s users.</p>
         </div>
         <div className="flex items-center gap-3">
           {/* App selector */}
           {appsLoading ? (
-            <div className="w-44 h-9 bg-zinc-800 rounded-lg animate-pulse" />
+            <div className="w-44 h-9 bg-zinc-200 dark:bg-zinc-800 rounded-lg animate-pulse" />
           ) : (
             <select
               value={selectedAppId}
               onChange={e => { setSelectedAppId(e.target.value); setShowCreateForm(false); }}
-              className="bg-zinc-900 border border-white/[0.08] text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
+              className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.08] text-zinc-700 dark:text-zinc-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-violet-500 focus:border-violet-500 min-w-[180px]"
             >
               <option value="">Select an app…</option>
               {apps.map(app => (
@@ -440,7 +440,7 @@ export default function RolesPage() {
 
       {/* No app selected */}
       {!selectedAppId ? (
-        <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-16 text-center">
+        <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-16 text-center">
           <div className="w-12 h-12 bg-violet-500/10 rounded-xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -466,7 +466,7 @@ export default function RolesPage() {
               <SkeletonCards />
             </div>
           ) : roles.length === 0 ? (
-            <div className="bg-zinc-900 border border-white/[0.06] rounded-xl p-16 text-center">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/[0.06] rounded-xl p-16 text-center">
               <p className="text-zinc-500 text-sm">No roles defined yet. Create your first role above.</p>
             </div>
           ) : (
