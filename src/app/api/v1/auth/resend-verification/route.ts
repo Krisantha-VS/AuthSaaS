@@ -20,6 +20,7 @@ export async function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   const ip = getIp(req);
+  const userAgent = req.headers.get('user-agent') ?? undefined;
   const rl = await checkRateLimit(`resend-verify:${ip}`, MAX_ATTEMPTS, WINDOW_MS);
   if (!rl.allowed) {
     const res = err('Too many requests. Try again later.', 'RATE_LIMITED', 429,
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
     }
 
     // Always return success — never reveal whether email/account exists
-    try { await resendVerification(parsed.data); } catch { /* swallow */ }
+    try { await resendVerification({ ...parsed.data, userAgent }); } catch { /* swallow */ }
     const res = ok({ message: 'If that email is registered and unverified, a verification email has been sent.' });
     return origin ? withCors(res, origin) : res;
   } catch (e) {

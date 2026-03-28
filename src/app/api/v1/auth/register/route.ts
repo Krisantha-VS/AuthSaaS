@@ -19,6 +19,7 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const ip = getIp(req);
+  const userAgent = req.headers.get('user-agent') ?? undefined;
   const origin = req.headers.get('origin');
   let corsOrigin: string | null = null;
 
@@ -39,7 +40,7 @@ export async function POST(req: Request) {
 
     if (origin && app) corsOrigin = origin;
 
-    const result = await register({ ...parsed.data, ipAddress: ip });
+    const result = await register({ ...parsed.data, ipAddress: ip, userAgent });
 
     // Set refresh token as httpOnly cookie (browser clients)
     const cookieStore = await cookies();

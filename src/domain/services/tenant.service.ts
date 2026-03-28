@@ -79,6 +79,12 @@ export async function forgotTenantPassword(email: string) {
   const tenant = await (tenantRepo as any).findByEmailWithPassword(email);
   if (!tenant) return;
 
+  await auditRepo.create({
+    tenantId: tenant.id,
+    action: 'tenant_password_reset_requested',
+    resource: 'tenant',
+  });
+
   const rawToken = crypto.randomBytes(32).toString('hex');
   const tokenHash = hashToken(rawToken);
   const exp = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
@@ -98,6 +104,12 @@ export async function resetTenantPassword(params: { token: string; email: string
 
   const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
   await tenantRepo.update(tenant.id, { password: passwordHash, resetToken: null, resetTokenExp: null } as any);
+
+  await auditRepo.create({
+    tenantId: tenant.id,
+    action: 'tenant_password_reset_completed',
+    resource: 'tenant',
+  });
 }
 
 // ─── App Management ──────────────────────────────────────
@@ -146,5 +158,14 @@ export async function toggleApp(appId: string, tenantId: string, isActive: boole
   const app = await appRepo.findById(appId);
   if (!app || app.tenantId !== tenantId) throw new Error('NOT_FOUND');
 
-  return appRepo.update(appId, { isActive } as any);
+  const result = await appRepo.update(appId, { isActive } as any);
+
+  await auditRepo.create({
+    tenantId,
+    appId,
+    action: isActive ? 'app_activated' : 'app_deactivated',
+    resource: 'tenant_app',
+  });
+
+  return result;
 }

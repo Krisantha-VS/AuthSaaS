@@ -14,6 +14,7 @@ export async function POST(req: Request) {
   if (preflight) return preflight;
 
   const origin = req.headers.get('origin');
+  const userAgent = req.headers.get('user-agent') ?? undefined;
 
   try {
     // Accept token from body OR httpOnly cookie
@@ -24,7 +25,7 @@ export async function POST(req: Request) {
     const parsed = refreshSchema.safeParse({ refreshToken: body.refreshToken ?? cookieToken });
     if (!parsed.success) return err('Refresh token required', 'VALIDATION_ERROR', 401);
 
-    const tokens = await refresh({ refreshToken: parsed.data.refreshToken, ipAddress: getIp(req) });
+    const tokens = await refresh({ refreshToken: parsed.data.refreshToken, ipAddress: getIp(req), userAgent });
 
     // Rotate the cookie alongside the token
     cookieStore.set('refresh_token', tokens.refreshToken, {

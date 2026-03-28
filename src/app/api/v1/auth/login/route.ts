@@ -21,6 +21,7 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const ip = getIp(req);
+  const userAgent = req.headers.get('user-agent') ?? undefined;
   const origin = req.headers.get('origin');
   let corsOrigin: string | null = null; // set after origin is validated against app
 
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
 
     let result: Awaited<ReturnType<typeof login>>;
     try {
-      result = await login({ ...parsed.data, ipAddress: ip });
+      result = await login({ ...parsed.data, ipAddress: ip, userAgent });
     } catch (e) {
       if (e instanceof Error && e.message === 'INVALID_CREDENTIALS') {
         await recordFailedAttempt(lockoutKey);

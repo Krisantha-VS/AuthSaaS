@@ -1,8 +1,10 @@
 import { RoleRepository } from '@/infrastructure/db/repositories/role.repository';
 import { UserRepository } from '@/infrastructure/db/repositories/user.repository';
+import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
 
 const roleRepo = new RoleRepository();
 const userRepo = new UserRepository();
+const auditRepo = new AuditLogRepository();
 
 // Permissions catalog — action:resource pairs available in the system
 export const PERMISSIONS_CATALOG = [
@@ -49,16 +51,37 @@ export async function assignRole(userId: string, appId: string, roleName: string
   const role = await roleRepo.findByName(appId, roleName);
   if (!role) throw new Error('ROLE_NOT_FOUND');
   await roleRepo.assignToUser(userId, role.id);
+  await auditRepo.create({
+    appId,
+    userId,
+    action: 'role_assigned',
+    resource: 'rbac',
+    meta: { roleName },
+  });
 }
 
 export async function revokeRole(userId: string, appId: string, roleName: string): Promise<void> {
   const role = await roleRepo.findByName(appId, roleName);
   if (!role) throw new Error('ROLE_NOT_FOUND');
   await roleRepo.revokeFromUser(userId, role.id);
+  await auditRepo.create({
+    appId,
+    userId,
+    action: 'role_revoked',
+    resource: 'rbac',
+    meta: { roleName },
+  });
 }
 
 export async function setUserRoles(userId: string, appId: string, roleNames: string[]): Promise<void> {
   await roleRepo.setUserRoles(userId, appId, roleNames);
+  await auditRepo.create({
+    appId,
+    userId,
+    action: 'roles_updated',
+    resource: 'rbac',
+    meta: { roles: roleNames },
+  });
 }
 
 export async function getUsersWithRoles(appId: string) {
@@ -86,12 +109,24 @@ export async function createRole(appId: string, name: string, description?: stri
   if (permissions.length > 0) {
     await roleRepo.setRolePermissions(role.id, permissions);
   }
+  await auditRepo.create({
+    appId,
+    action: 'role_created',
+    resource: 'rbac',
+    meta: { name, permissions },
+  });
 }
 
 export async function updateRolePermissions(roleId: string, appId: string, permissions: string[]): Promise<void> {
   const role = await roleRepo.findById(roleId);
   if (!role || (role as any).appId !== appId) throw new Error('ROLE_NOT_FOUND');
   await roleRepo.setRolePermissions(roleId, permissions);
+  await auditRepo.create({
+    appId,
+    action: 'role_permissions_updated',
+    resource: 'rbac',
+    meta: { roleId, permissions },
+  });
 }
 
 export type { RoleWithPermissions } from '@/infrastructure/db/repositories/role.repository';

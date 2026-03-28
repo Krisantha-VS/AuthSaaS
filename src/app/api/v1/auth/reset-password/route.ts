@@ -10,6 +10,7 @@ export async function OPTIONS(req: Request) {
 
 export async function POST(req: Request) {
   const origin = req.headers.get('origin');
+  const userAgent = req.headers.get('user-agent') ?? undefined;
   const body = await req.json().catch(() => null);
   const parsed = resetPasswordSchema.safeParse(body);
   if (!parsed.success) {
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    await resetPassword(parsed.data);
+    await resetPassword({ ...parsed.data, userAgent });
     const res = ok({ message: 'Password reset successfully. Please log in with your new password.' });
     return origin ? withCors(res, origin) : res;
   } catch (e) {

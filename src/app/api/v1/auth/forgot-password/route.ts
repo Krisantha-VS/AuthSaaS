@@ -11,6 +11,7 @@ export async function OPTIONS(req: Request) {
 export async function POST(req: Request) {
   const origin = req.headers.get('origin');
   const ip = getIp(req);
+  const userAgent = req.headers.get('user-agent') ?? undefined;
   const rl = await checkRateLimit(`forgot:${ip}`, 3, 15 * 60 * 1000);
   if (!rl.allowed) {
     const res = err('Too many requests', 'RATE_LIMITED', 429, {
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
 
   try {
     // Always returns success — never reveals whether email exists
-    await forgotPassword(parsed.data);
+    await forgotPassword({ ...parsed.data, ipAddress: ip, userAgent });
     const res = ok({ message: 'If that email exists, a reset link has been sent.' });
     return origin ? withCors(res, origin) : res;
   } catch (e) {

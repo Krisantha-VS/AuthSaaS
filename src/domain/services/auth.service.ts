@@ -41,6 +41,7 @@ export async function register(params: {
   password: string;
   name?: string;
   ipAddress?: string;
+  userAgent?: string;
 }) {
   const app = await tenantAppRepo.findByClientId(params.clientId);
   if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
@@ -68,6 +69,7 @@ export async function register(params: {
     action: 'register',
     resource: 'auth',
     ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
   });
 
   const tokens = await issueTokens(user.id, app.id, user.email, user.roles);
@@ -105,6 +107,7 @@ export async function login(params: {
   email: string;
   password: string;
   ipAddress?: string;
+  userAgent?: string;
 }) {
   const app = await tenantAppRepo.findByClientId(params.clientId);
   if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
@@ -114,7 +117,17 @@ export async function login(params: {
   if (!userWithPassword.isActive) throw new Error('ACCOUNT_DISABLED');
 
   const valid = await bcrypt.compare(params.password, userWithPassword.passwordHash);
-  if (!valid) throw new Error('INVALID_CREDENTIALS');
+  if (!valid) {
+    await auditRepo.create({
+      appId: app.id,
+      action: 'login_failed',
+      resource: 'auth',
+      ipAddress: params.ipAddress,
+      userAgent: params.userAgent,
+      meta: { email: params.email },
+    });
+    throw new Error('INVALID_CREDENTIALS');
+  }
 
   await auditRepo.create({
     appId: app.id,
@@ -122,6 +135,7 @@ export async function login(params: {
     action: 'login',
     resource: 'auth',
     ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
   });
 
   const roles = userWithPassword.roles?.map((ur: any) => ur.role.name) ?? [];
@@ -143,7 +157,7 @@ export async function login(params: {
   return { user, tokens };
 }
 
-export async function refresh(params: { refreshToken: string; ipAddress?: string }) {
+export async function refresh(params: { refreshToken: string; ipAddress?: string; userAgent?: string }) {
   const tokenHash = hashToken(params.refreshToken);
   const stored = await refreshTokenRepo.findByHash(tokenHash);
 
@@ -170,18 +184,21 @@ export async function refresh(params: { refreshToken: string; ipAddress?: string
     action: 'token_refresh',
     resource: 'auth',
     ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
   });
 
   return issueTokens(user.id, stored.appId, user.email, user.roles);
 }
 
-export async function logout(params: { userId: string; appId: string }) {
+export async function logout(params: { userId: string; appId: string; ipAddress?: string; userAgent?: string }) {
   await refreshTokenRepo.deleteAllForUser(params.userId);
   await auditRepo.create({
     appId: params.appId,
     userId: params.userId,
     action: 'logout',
     resource: 'auth',
+    ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
   });
 }
 
@@ -192,12 +209,20 @@ export async function verifyEmail(params: { token: string; email: string }) {
   if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
 
   await userRepo.update(user.id, { emailVerified: true, verifyToken: null } as any);
+  await auditRepo.create({
+    appId: user.appId,
+    userId: user.id,
+    action: 'email_verified',
+    resource: 'auth',
+  });
   dispatchWebhookEvent(user.appId, 'user.verified', { userId: user.id, email: user.email }).catch(() => {});
 }
 
 export async function forgotPassword(params: {
   clientId: string;
   email: string;
+  ipAddress?: string;
+  userAgent?: string;
 }) {
   const app = await tenantAppRepo.findByClientId(params.clientId);
   if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
@@ -205,6 +230,15 @@ export async function forgotPassword(params: {
   // Always respond with success — never reveal whether the email exists
   const user = await userRepo.findByEmail(app.id, params.email);
   if (!user || !user.isActive) return;
+
+  await auditRepo.create({
+    appId: app.id,
+    userId: user.id,
+    action: 'password_reset_requested',
+    resource: 'auth',
+    ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
+  });
 
   const resetTokenRaw = crypto.randomBytes(32).toString('hex');
   const resetToken = hashToken(resetTokenRaw);
@@ -221,6 +255,7 @@ export async function resetPassword(params: {
   token: string;
   email: string;
   password: string;
+  userAgent?: string;
 }) {
   const tokenHash = hashToken(params.token);
   const user = await (userRepo as any).findByResetToken(tokenHash);
@@ -229,6 +264,12 @@ export async function resetPassword(params: {
 
   const passwordHash = await bcrypt.hash(params.password, SALT_ROUNDS);
   await userRepo.update(user.id, { passwordHash, resetToken: null, resetTokenExp: null } as any);
+  await auditRepo.create({
+    appId: user.appId,
+    userId: user.id,
+    action: 'password_reset_completed',
+    resource: 'auth',
+  });
 
   // Invalidate all sessions after password reset
   await refreshTokenRepo.deleteAllForUser(user.id);
@@ -238,6 +279,8 @@ export async function resetPassword(params: {
 export async function resendVerification(params: {
   clientId: string;
   email: string;
+  ipAddress?: string;
+  userAgent?: string;
 }) {
   const app = await tenantAppRepo.findByClientId(params.clientId);
   if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
@@ -245,6 +288,15 @@ export async function resendVerification(params: {
   const user = await userRepo.findByEmail(app.id, params.email);
   if (!user) throw new Error('USER_NOT_FOUND');
   if (user.emailVerified) throw new Error('ALREADY_VERIFIED');
+
+  await auditRepo.create({
+    appId: app.id,
+    userId: user.id,
+    action: 'resend_verification',
+    resource: 'auth',
+    ipAddress: params.ipAddress,
+    userAgent: params.userAgent,
+  });
 
   const verifyTokenRaw = crypto.randomBytes(32).toString('hex');
   const verifyToken = hashToken(verifyTokenRaw);
