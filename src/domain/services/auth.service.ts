@@ -227,9 +227,30 @@ export async function forgotPassword(params: {
   email: string;
   ipAddress?: string;
   userAgent?: string;
+  redirectTo?: string;
 }) {
   const app = await tenantAppRepo.findByClientId(params.clientId);
   if (!app || !app.isActive) throw new Error('INVALID_CLIENT');
+
+  // Validate redirectTo — must be a valid URL whose hostname ends with .royalda.com
+  // or matches one of the app's allowedOrigins. Falls back to the default login page.
+  let validatedRedirectTo = `${config.app.url}/login`;
+  if (params.redirectTo) {
+    try {
+      const redirectUrl = new URL(params.redirectTo);
+      const allowedOrigins: string[] = Array.isArray((app as any).allowedOrigins)
+        ? (app as any).allowedOrigins
+        : [];
+      const hostnameAllowed =
+        redirectUrl.hostname.endsWith('.royalda.com') ||
+        allowedOrigins.some(origin => {
+          try { return new URL(origin).hostname === redirectUrl.hostname; } catch { return false; }
+        });
+      if (hostnameAllowed) validatedRedirectTo = params.redirectTo;
+    } catch {
+      // invalid URL — use default
+    }
+  }
 
   // Always respond with success — never reveal whether the email exists
   const user = await userRepo.findByEmail(app.id, params.email);
@@ -250,7 +271,7 @@ export async function forgotPassword(params: {
 
   await userRepo.update(user.id, { resetToken, resetTokenExp } as any);
 
-  const resetUrl = `${config.app.url}/reset-password?token=${resetTokenRaw}&email=${encodeURIComponent(params.email)}`;
+  const resetUrl = `${config.app.url}/reset-password?token=${resetTokenRaw}&email=${encodeURIComponent(params.email)}&redirectTo=${encodeURIComponent(validatedRedirectTo)}`;
   const { subject, html } = passwordResetEmail({ name: user.name ?? null, resetUrl });
   await sendMail(params.email, subject, html);
 }

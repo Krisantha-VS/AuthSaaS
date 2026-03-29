@@ -8,8 +8,9 @@ import { AuthSaasLogo } from '@/components/docs/header';
 function ResetForm() {
   const params   = useSearchParams();
   const router   = useRouter();
-  const token    = params.get('token') ?? '';
-  const email    = params.get('email') ?? '';
+  const token      = params.get('token') ?? '';
+  const email      = params.get('email') ?? '';
+  const redirectTo = params.get('redirectTo') || '/dashboard';
 
   const [password, setPassword]   = useState('');
   const [confirm, setConfirm]     = useState('');
@@ -44,7 +45,7 @@ function ResetForm() {
         body: JSON.stringify({ token, email, password }),
       });
       const j = await res.json();
-      if (j.success) { setDone(true); setTimeout(() => router.push('/dashboard/login'), 2500); }
+      if (j.success) { setDone(true); setTimeout(() => router.push(redirectTo), 2500); }
       else setError(j.error ?? 'Reset failed');
     } catch {
       setError('Network error — please try again');

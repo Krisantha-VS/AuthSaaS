@@ -39,6 +39,7 @@ export const tenantLoginSchema = z.object({
 export const forgotPasswordSchema = z.object({
   clientId: z.string().min(1),
   email: z.string().email(),
+  redirectTo: z.string().optional(),
 });
 
 export const resetPasswordSchema = z.object({

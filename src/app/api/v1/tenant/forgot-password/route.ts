@@ -19,7 +19,8 @@ export async function POST(req: Request) {
   if (!parsed.success) return err(parsed.error.issues[0].message, 'VALIDATION_ERROR');
 
   try {
-    await forgotTenantPassword(parsed.data.email);
+    const redirectTo: string | undefined = typeof body?.redirectTo === 'string' ? body.redirectTo : undefined;
+    await forgotTenantPassword(parsed.data.email, redirectTo);
     return ok({ message: 'If that email exists, a reset link has been sent.' });
   } catch (e) {
     return handleError(e);

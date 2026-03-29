@@ -78,7 +78,21 @@ function hashToken(token: string) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export async function forgotTenantPassword(email: string) {
+export async function forgotTenantPassword(email: string, redirectTo?: string) {
+  // Validate redirectTo — hostname must end with .royalda.com only.
+  // Falls back to the default dashboard reset page.
+  let validatedRedirectTo = `${config.app.url}/dashboard/reset-password`;
+  if (redirectTo) {
+    try {
+      const redirectUrl = new URL(redirectTo);
+      if (redirectUrl.hostname.endsWith('.royalda.com')) {
+        validatedRedirectTo = redirectTo;
+      }
+    } catch {
+      // invalid URL — use default
+    }
+  }
+
   // Always silent — never reveal if email exists
   const tenant = await (tenantRepo as any).findByEmailWithPassword(email);
   if (!tenant) return;
@@ -95,7 +109,7 @@ export async function forgotTenantPassword(email: string) {
 
   await tenantRepo.update(tenant.id, { resetToken: tokenHash, resetTokenExp: exp } as any);
 
-  const resetUrl = `${config.app.url}/dashboard/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}`;
+  const resetUrl = `${config.app.url}/dashboard/reset-password?token=${rawToken}&email=${encodeURIComponent(email)}&redirectTo=${encodeURIComponent(validatedRedirectTo)}`;
   const { subject, html } = passwordResetEmail({ name: tenant.name ?? null, resetUrl });
   await sendMail(email, subject, html);
 }

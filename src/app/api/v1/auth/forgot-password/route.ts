@@ -29,7 +29,8 @@ export async function POST(req: Request) {
 
   try {
     // Always returns success — never reveals whether email exists
-    await forgotPassword({ ...parsed.data, ipAddress: ip, userAgent });
+    const redirectTo: string | undefined = typeof body?.redirectTo === 'string' ? body.redirectTo : undefined;
+    await forgotPassword({ ...parsed.data, ipAddress: ip, userAgent, redirectTo });
     const res = ok({ message: 'If that email exists, a reset link has been sent.' });
     return origin ? withCors(res, origin) : res;
   } catch (e) {
