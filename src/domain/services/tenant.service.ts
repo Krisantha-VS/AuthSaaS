@@ -7,7 +7,7 @@ import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.r
 import { config } from '@/shared/config';
 import { seedDefaultRoles } from '@/domain/services/rbac.service';
 import { sendMail } from '@/infrastructure/email/mailer';
-import { passwordResetEmail } from '@/infrastructure/email/templates';
+import { passwordResetEmail, tenantWelcomeEmail, tenantPasswordChangedEmail } from '@/infrastructure/email/templates';
 
 const tenantRepo = new TenantRepository();
 const appRepo = new TenantAppRepository();
@@ -46,6 +46,10 @@ export async function registerTenant(params: {
   const tenant = await tenantRepo.create({ name: params.name, email: params.email, password: passwordHash });
 
   await auditRepo.create({ tenantId: tenant.id, action: 'tenant_register', resource: 'tenant', ipAddress: params.ipAddress });
+
+  // Send welcome email (non-blocking)
+  const { subject: twSubject, html: twHtml } = tenantWelcomeEmail({ name: tenant.name ?? null });
+  sendMail(tenant.email, twSubject, twHtml).catch(err => console.error('email error:', err));
 
   const tokens = issueTenantTokens(tenant.id, tenant.email);
   return { tenant, tokens };
@@ -110,6 +114,10 @@ export async function resetTenantPassword(params: { token: string; email: string
     action: 'tenant_password_reset_completed',
     resource: 'tenant',
   });
+
+  // Send password-changed notification (non-blocking)
+  const { subject: tpcSubject, html: tpcHtml } = tenantPasswordChangedEmail({ name: tenant.name ?? null });
+  sendMail(tenant.email, tpcSubject, tpcHtml).catch(err => console.error('email error:', err));
 }
 
 // ─── App Management ──────────────────────────────────────

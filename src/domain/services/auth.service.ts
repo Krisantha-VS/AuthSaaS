@@ -6,7 +6,7 @@ import { RefreshTokenRepository } from '@/infrastructure/db/repositories/refresh
 import { TenantAppRepository } from '@/infrastructure/db/repositories/tenant-app.repository';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
 import { sendMail } from '@/infrastructure/email/mailer';
-import { verificationEmail, passwordResetEmail } from '@/infrastructure/email/templates';
+import { verificationEmail, passwordResetEmail, emailVerifiedEmail, passwordChangedEmail } from '@/infrastructure/email/templates';
 import { config } from '@/shared/config';
 import type { AuthTokens } from '@/shared/types';
 import { assignRole } from '@/domain/services/rbac.service';
@@ -216,6 +216,10 @@ export async function verifyEmail(params: { token: string; email: string }) {
     resource: 'auth',
   });
   dispatchWebhookEvent(user.appId, 'user.verified', { userId: user.id, email: user.email }).catch(() => {});
+
+  // Send email-verified confirmation (non-blocking)
+  const { subject: evSubject, html: evHtml } = emailVerifiedEmail({ name: user.name ?? null });
+  sendMail(user.email, evSubject, evHtml).catch(err => console.error('email error:', err));
 }
 
 export async function forgotPassword(params: {
@@ -274,6 +278,10 @@ export async function resetPassword(params: {
   // Invalidate all sessions after password reset
   await refreshTokenRepo.deleteAllForUser(user.id);
   dispatchWebhookEvent(user.appId, 'user.password_reset', { userId: user.id, email: user.email }).catch(() => {});
+
+  // Send password-changed notification (non-blocking)
+  const { subject: pcSubject, html: pcHtml } = passwordChangedEmail({ name: user.name ?? null });
+  sendMail(user.email, pcSubject, pcHtml).catch(err => console.error('email error:', err));
 }
 
 export async function resendVerification(params: {

@@ -1,28 +1,15 @@
-import nodemailer from 'nodemailer';
-import { config } from '@/shared/config';
-
-let _transporter: nodemailer.Transporter | undefined;
-
-function getTransporter(): nodemailer.Transporter {
-  if (!_transporter) {
-    _transporter = nodemailer.createTransport({
-      host: config.email.host,
-      port: config.email.port,
-      secure: false, // STARTTLS on port 587
-      auth: {
-        user: config.email.user,
-        pass: config.email.pass,
-      },
-    });
-  }
-  return _transporter;
-}
+const ROYALDA_MAIL_URL = 'https://mail.royalda.com/api/v1/send'
+const ROYALDA_MAIL_KEY = process.env.ROYALDA_MAIL_API_KEY!
+const FROM = 'noreply@royalda.com'
 
 export async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  await getTransporter().sendMail({
-    from: `"AuthSaas" <${config.email.from}>`,
-    to,
-    subject,
-    html,
-  });
+  const res = await fetch(ROYALDA_MAIL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ROYALDA_MAIL_KEY}` },
+    body: JSON.stringify({ to, subject, html, from: FROM }),
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(`Royalda Mail error: ${err?.error?.message ?? res.status}`)
+  }
 }

@@ -84,3 +84,139 @@ export function passwordResetEmail(params: {
     `),
   };
 }
+
+export function emailVerifiedEmail(params: {
+  name: string | null;
+}): { subject: string; html: string } {
+  return {
+    subject: 'Your email has been verified',
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#16a34a,#22c55e);border-radius:50%;width:56px;height:56px;line-height:56px;text-align:center;">
+          <span style="color:#fff;font-size:28px;line-height:56px;">&#10003;</span>
+        </div>
+      </div>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Email verified</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 28px;text-align:center;">
+        Hi ${params.name ?? 'there'}, your email address has been successfully verified.
+        You can now sign in to your account.
+      </p>
+      <div style="text-align:center;">
+        ${btn('https://auth-saas.royalda.com/login', 'Sign in to your account')}
+      </div>
+    `),
+  };
+}
+
+export function passwordChangedEmail(params: {
+  name: string | null;
+}): { subject: string; html: string } {
+  const timestamp = new Date().toUTCString();
+  return {
+    subject: 'Your password has been changed',
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#b45309,#f59e0b);border-radius:50%;width:56px;height:56px;line-height:56px;text-align:center;">
+          <span style="color:#fff;font-size:26px;line-height:56px;">&#9888;</span>
+        </div>
+      </div>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Password changed</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 16px;">
+        Hi ${params.name ?? 'there'}, the password for your account was successfully changed.
+      </p>
+      <div style="background:#27272a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px;margin-bottom:24px;">
+        <p style="color:#71717a;font-size:12px;margin:0 0 4px;">Time of change</p>
+        <p style="color:#e4e4e7;font-size:13px;font-weight:600;margin:0;">${timestamp}</p>
+      </div>
+      <p style="color:#f87171;font-size:13px;font-weight:600;margin:0 0 8px;">If this wasn't you, act immediately:</p>
+      <p style="color:#a1a1aa;font-size:13px;line-height:1.6;margin:0 0 20px;">
+        Contact our support team right away at
+        <a href="mailto:support@royalda.com" style="color:#7c3aed;">support@royalda.com</a>
+        to secure your account.
+      </p>
+    `),
+  };
+}
+
+export function tenantWelcomeEmail(params: {
+  name: string | null;
+}): { subject: string; html: string } {
+  return {
+    subject: 'Welcome to Royalda',
+    html: base(`
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 8px;">Welcome to Royalda&#x1F44B;</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 16px;">
+        Hi ${params.name ?? 'there'}, your Royalda account is ready. You can now manage your applications,
+        configure authentication, and monitor your users from the dashboard.
+      </p>
+      <ul style="color:#a1a1aa;font-size:14px;line-height:2;margin:0 0 28px;padding-left:20px;">
+        <li>Create and configure apps with a single client ID</li>
+        <li>Invite users and manage roles</li>
+        <li>Monitor auth events in real time</li>
+      </ul>
+      ${btn('https://auth-saas.royalda.com/dashboard', 'Go to dashboard')}
+      <p style="color:#52525b;font-size:12px;margin:24px 0 0;">
+        Need help? Reach us at <a href="mailto:support@royalda.com" style="color:#7c3aed;">support@royalda.com</a>
+      </p>
+    `),
+  };
+}
+
+export function tenantPasswordChangedEmail(params: {
+  name: string | null;
+}): { subject: string; html: string } {
+  const timestamp = new Date().toUTCString();
+  return {
+    subject: 'Your password has been changed',
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#b45309,#f59e0b);border-radius:50%;width:56px;height:56px;line-height:56px;text-align:center;">
+          <span style="color:#fff;font-size:26px;line-height:56px;">&#9888;</span>
+        </div>
+      </div>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Dashboard password changed</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 16px;">
+        Hi ${params.name ?? 'there'}, the password for your Royalda dashboard account was successfully changed.
+      </p>
+      <div style="background:#27272a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px;margin-bottom:24px;">
+        <p style="color:#71717a;font-size:12px;margin:0 0 4px;">Time of change</p>
+        <p style="color:#e4e4e7;font-size:13px;font-weight:600;margin:0;">${timestamp}</p>
+      </div>
+      <p style="color:#f87171;font-size:13px;font-weight:600;margin:0 0 8px;">If this wasn't you, act immediately:</p>
+      <p style="color:#a1a1aa;font-size:13px;line-height:1.6;margin:0 0 20px;">
+        Contact our support team at
+        <a href="mailto:support@royalda.com" style="color:#7c3aed;">support@royalda.com</a>
+        to secure your account.
+      </p>
+    `),
+  };
+}
+
+export function accountLockedEmail(params: {
+  name: string | null;
+  unlockTime: string;
+}): { subject: string; html: string } {
+  return {
+    subject: 'Your account has been temporarily locked',
+    html: base(`
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="display:inline-block;background:linear-gradient(135deg,#dc2626,#ef4444);border-radius:50%;width:56px;height:56px;line-height:56px;text-align:center;">
+          <span style="color:#fff;font-size:26px;line-height:56px;">&#128274;</span>
+        </div>
+      </div>
+      <h1 style="color:#fff;font-size:22px;font-weight:700;margin:0 0 8px;text-align:center;">Account temporarily locked</h1>
+      <p style="color:#a1a1aa;font-size:14px;line-height:1.6;margin:0 0 16px;">
+        Hi ${params.name ?? 'there'}, your account has been temporarily locked due to too many failed sign-in attempts.
+      </p>
+      <div style="background:#27272a;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:12px 16px;margin-bottom:24px;">
+        <p style="color:#71717a;font-size:12px;margin:0 0 4px;">Account will unlock at</p>
+        <p style="color:#e4e4e7;font-size:13px;font-weight:600;margin:0;">${params.unlockTime}</p>
+      </div>
+      <p style="color:#a1a1aa;font-size:13px;line-height:1.6;margin:0 0 20px;">
+        If you did not attempt to sign in, your account may be under attack.
+        Please contact support immediately at
+        <a href="mailto:support@royalda.com" style="color:#7c3aed;">support@royalda.com</a>.
+      </p>
+    `),
+  };
+}
