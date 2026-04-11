@@ -170,3 +170,22 @@ model WebhookDelivery {
 
   @@map("webhook_deliveries")
 }
+
+model AuthCode {
+  id                  String    @id @default(cuid())
+  codeHash            String    @unique
+  clientId            String
+  userId              String
+  codeChallenge       String
+  codeChallengeMethod String    @default("S256")
+  redirectUri         String
+  used                Boolean   @default(false)
+  usedAt              DateTime?
+  expiresAt           DateTime
+  createdAt           DateTime  @default(now())
+
+  @@index([codeHash])
+  @@index([clientId])
+  @@index([expiresAt])
+  @@map("auth_codes")
+}
