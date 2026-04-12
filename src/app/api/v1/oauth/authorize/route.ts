@@ -166,10 +166,12 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // Redirect to TaskFlow callback with code
+  // Return redirect URL as JSON — client-side window.location.href picks it up.
+  // A server-side 302 would be an opaque redirect from the form's fetch(), making
+  // the Location header inaccessible and losing the code + state params.
   const callbackUrl = new URL(redirect_uri);
   callbackUrl.searchParams.set('code',  codeRaw);
   callbackUrl.searchParams.set('state', state);
 
-  return NextResponse.redirect(callbackUrl, { status: 302 });
+  return NextResponse.json({ success: true, data: { redirectTo: callbackUrl.toString() } });
 }

@@ -31,9 +31,8 @@ export function OAuthLoginForm({
 
     try {
       const res = await fetch('/api/v1/oauth/authorize', {
-        method:   'POST',
-        headers:  { 'Content-Type': 'application/json' },
-        redirect: 'manual',
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           client_id:             clientId,
           email,
@@ -45,18 +44,21 @@ export function OAuthLoginForm({
         }),
       });
 
-      // Successful auth returns a 302 redirect — follow it
-      if (res.type === 'opaqueredirect' || res.status === 302) {
-        const location = res.headers.get('location') || redirectUri;
-        window.location.href = location;
-        return;
-      }
+      const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
         setError((data as { error?: string }).error ?? 'Authentication failed. Please try again.');
         return;
       }
+
+      // Authorize returns { success: true, data: { redirectTo } }
+      const redirectTo: string | undefined = (data as { data?: { redirectTo?: string } }).data?.redirectTo;
+      if (redirectTo) {
+        window.location.href = redirectTo;
+        return;
+      }
+
+      setError('Authentication failed. Please try again.');
     } catch {
       setError('Network error. Please check your connection and try again.');
     } finally {
