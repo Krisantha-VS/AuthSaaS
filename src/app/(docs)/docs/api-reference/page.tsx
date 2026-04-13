@@ -10,6 +10,10 @@ const toc = [
   { id: 'auth-logout',           title: 'POST /auth/logout',             depth: 3 },
   { id: 'auth-verify',           title: 'GET /auth/verify',              depth: 3 },
   { id: 'auth-resend',           title: 'POST /auth/resend-verification', depth: 3 },
+  { id: 'oauth',                 title: 'OAuth 2.0 + PKCE' },
+  { id: 'oauth-authorize-get',   title: 'GET /oauth/authorize',          depth: 3 },
+  { id: 'oauth-authorize-post',  title: 'POST /oauth/authorize',         depth: 3 },
+  { id: 'oauth-token',           title: 'POST /oauth/token',             depth: 3 },
   { id: 'tenant',                title: 'Tenant' },
   { id: 'tenant-register',       title: 'POST /tenant/register',         depth: 3 },
   { id: 'tenant-login',          title: 'POST /tenant/login',            depth: 3 },
@@ -118,6 +122,67 @@ export default function ApiReferencePage() {
         ]} />
         <Callout variant="note">
           Generating a new token invalidates the previous one.
+        </Callout>
+
+        {/* OAuth */}
+        <SectionHeading id="oauth">OAuth 2.0 + PKCE</SectionHeading>
+        <p>
+          Redirect-based authentication flow. See the <a href="/docs/oauth">OAuth guide</a> for
+          the full integration walkthrough.
+        </p>
+
+        <SubHeading id="oauth-authorize-get">Start authorization</SubHeading>
+        <Endpoint method="GET" path="/oauth/authorize" />
+        <p>Validates OAuth parameters and redirects to the hosted login page. Triggered by a browser redirect from your app — <strong>not</strong> via <code>fetch</code>.</p>
+        <ParamTable params={[
+          { name: 'client_id',             type: 'string (query)', required: true,  description: 'Your app clientId' },
+          { name: 'redirect_uri',          type: 'string (query)', required: true,  description: 'Must start with an allowedOrigin for the app' },
+          { name: 'response_type',         type: 'string (query)', required: true,  description: 'Must be "code"' },
+          { name: 'code_challenge',        type: 'string (query)', required: true,  description: 'BASE64URL(SHA256(code_verifier))' },
+          { name: 'code_challenge_method', type: 'string (query)', required: true,  description: 'Must be "S256"' },
+          { name: 'state',                 type: 'string (query)', required: true,  description: 'Random CSRF token — echoed back to redirect_uri' },
+        ]} />
+        <CodeBlock lang="text" filename="Success" code={`302 → /oauth/login?client_id=...&redirect_uri=...&code_challenge=...&state=...`} />
+
+        <SubHeading id="oauth-authorize-post">Submit credentials (hosted form only)</SubHeading>
+        <Endpoint method="POST" path="/oauth/authorize" />
+        <p>Called by the AuthSaas-hosted login form after the user enters their credentials. On success returns a JSON redirect URL — the form navigates via <code>window.location.href</code>.</p>
+        <ParamTable params={[
+          { name: 'client_id',             type: 'string', required: true, description: 'Your app clientId' },
+          { name: 'email',                 type: 'string', required: true, description: 'User email' },
+          { name: 'password',              type: 'string', required: true, description: 'User password' },
+          { name: 'code_challenge',        type: 'string', required: true, description: 'BASE64URL(SHA256(code_verifier))' },
+          { name: 'code_challenge_method', type: 'string', required: true, description: 'Must be "S256"' },
+          { name: 'redirect_uri',          type: 'string', required: true, description: 'Must match allowedOrigin' },
+          { name: 'state',                 type: 'string', required: true, description: 'CSRF token from step 1' },
+        ]} />
+        <CodeBlock lang="json" filename="Response · 200" code={`{
+  "success": true,
+  "data": { "redirectTo": "https://your-app.com/api/auth/callback?code=xxx&state=xxx" }
+}`} />
+
+        <SubHeading id="oauth-token">Exchange code for tokens</SubHeading>
+        <Endpoint method="POST" path="/oauth/token" />
+        <p><strong>Server-to-server only.</strong> No CORS headers — never call from a browser. Exchanges the authorization code for access and refresh tokens.</p>
+        <ParamTable params={[
+          { name: 'grant_type',    type: 'string', required: true, description: 'Must be "authorization_code"' },
+          { name: 'code',          type: 'string', required: true, description: 'Authorization code from callback' },
+          { name: 'client_id',     type: 'string', required: true, description: 'Your app clientId' },
+          { name: 'code_verifier', type: 'string', required: true, description: 'The original random verifier from step 1' },
+          { name: 'redirect_uri',  type: 'string', required: true, description: 'Must exactly match the value used in step 1' },
+        ]} />
+        <CodeBlock lang="json" filename="Response · 200" code={`{
+  "success": true,
+  "data": {
+    "access_token":  "eyJ...",
+    "refresh_token": "eyJ...",
+    "token_type":    "Bearer",
+    "expires_in":    900
+  }
+}`} />
+        <Callout variant="note">
+          Authorization codes expire in <strong>10 minutes</strong> and are single-use.
+          A replayed code returns <code>INVALID_GRANT</code>.
         </Callout>
 
         {/* Tenant */}

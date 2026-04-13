@@ -22,6 +22,7 @@ export const docsNav: NavSection[] = [
     items: [
       { title: 'Overview',            href: '/docs/concepts' },
       { title: 'RBAC & Permissions',  href: '/docs/rbac', badge: 'new' as const },
+      { title: 'OAuth 2.0 + PKCE',    href: '/docs/oauth',  badge: 'new' as const },
     ],
   },
   {

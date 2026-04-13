@@ -6,6 +6,7 @@ const toc = [
   { id: 'apps',         title: 'Apps' },
   { id: 'users',        title: 'Users' },
   { id: 'tokens',       title: 'Tokens' },
+  { id: 'oauth',        title: 'OAuth 2.0 + PKCE' },
   { id: 'email-verify', title: 'Email verification' },
   { id: 'rbac',         title: 'RBAC' },
   { id: 'roles',        title: 'Default roles',   depth: 3 },
@@ -61,6 +62,25 @@ export default function ConceptsPage() {
           the refresh token is used only to obtain a new pair. See the{' '}
           <a href="/docs/security">Security</a> page for the full token lifecycle and rotation behaviour.
         </p>
+
+        <SectionHeading id="oauth">OAuth 2.0 + PKCE</SectionHeading>
+        <p>
+          In addition to the direct <code>POST /auth/login</code> flow, AuthSaas supports the{' '}
+          <strong>Authorization Code Flow with PKCE</strong>. Use it when you want a hosted
+          login page (users never enter credentials in your app) or to enable SSO across multiple
+          apps with a single sign-in session.
+        </p>
+        <p>
+          The flow at a glance: your app generates a PKCE verifier/challenge pair, redirects the
+          browser to <code>GET /api/v1/oauth/authorize</code>, the user logs in on the AuthSaas
+          page, and AuthSaas redirects back to your <code>redirect_uri</code> with a short-lived
+          authorization code. Your server exchanges the code for tokens via{' '}
+          <code>POST /api/v1/oauth/token</code> (server-to-server only).
+        </p>
+        <Callout variant="note">
+          See the full guide and code samples on the{' '}
+          <a href="/docs/oauth">OAuth 2.0 + PKCE</a> page.
+        </Callout>
 
         <SectionHeading id="email-verify">Email verification</SectionHeading>
         <p>
