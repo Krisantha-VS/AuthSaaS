@@ -109,8 +109,10 @@ export function rotateSecret(token: string, appId: string) {
 // ── OAuth Providers ───────────────────────────────────────────────────────────
 
 export interface OAuthProviderSetting {
-  provider: string;
-  enabled:  boolean;
+  provider:         string;
+  enabled:          boolean;
+  hasKeys:          boolean;
+  providerClientId: string | null;
 }
 
 export function getOAuthProviders(token: string, appId: string) {
@@ -121,6 +123,19 @@ export function setOAuthProvider(token: string, appId: string, provider: string,
   return request<OAuthProviderSetting>(`/apps/${appId}/oauth-providers`, {
     method: 'PATCH',
     body: JSON.stringify({ provider, enabled }),
+  }, token);
+}
+
+export function saveOAuthProviderKeys(
+  token: string,
+  appId: string,
+  provider: string,
+  providerClientId: string,
+  providerSecret: string,
+) {
+  return request<OAuthProviderSetting>(`/apps/${appId}/oauth-providers`, {
+    method: 'PATCH',
+    body: JSON.stringify({ provider, providerClientId, providerSecret }),
   }, token);
 }
 

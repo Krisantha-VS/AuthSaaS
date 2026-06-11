@@ -46,13 +46,15 @@ model TenantApp {
 }
 
 model AppOAuthProvider {
-  id        String    @id @default(cuid())
-  appId     String
-  provider  String
-  enabled   Boolean   @default(false)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  app       TenantApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+  id               String    @id @default(cuid())
+  appId            String
+  provider         String
+  enabled          Boolean   @default(false)
+  providerClientId String?
+  providerSecret   String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  app              TenantApp @relation(fields: [appId], references: [id], onDelete: Cascade)
 
   @@unique([appId, provider])
   @@map("app_oauth_providers")

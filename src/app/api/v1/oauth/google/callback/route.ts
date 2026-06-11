@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/infrastructure/db/client';
 import { AuditLogRepository } from '@/infrastructure/db/repositories/audit-log.repository';
+import { decryptSecret } from '@/shared/lib/crypto';
 
 const auditRepo = new AuditLogRepository();
 
@@ -25,26 +26,47 @@ export async function GET(req: NextRequest) {
   if (errorParam) return errorPage('Google sign-in was cancelled or failed.');
   if (!code || !stateParam) return errorPage('Invalid callback parameters.');
 
-  // Decode PKCE params from state
-  let pkce: { client_id: string; redirect_uri: string; code_challenge: string; code_challenge_method: string; pkce_state: string };
+  let pkce: {
+    client_id: string;
+    redirect_uri: string;
+    code_challenge: string;
+    code_challenge_method: string;
+    pkce_state: string;
+    byok?: boolean;
+  };
   try {
     pkce = JSON.parse(Buffer.from(stateParam, 'base64url').toString('utf-8'));
   } catch {
     return errorPage('Invalid state parameter.');
   }
 
-  // Validate client
-  const app = await prisma.tenantApp.findUnique({ where: { clientId: pkce.client_id } });
+  const app = await prisma.tenantApp.findUnique({
+    where:   { clientId: pkce.client_id },
+    include: { oauthProviders: { where: { provider: 'google' } } },
+  });
   if (!app || !app.isActive) return errorPage('Invalid client application.');
 
-  // Exchange code for Google tokens
+  // Resolve Google credentials: BYOK if configured, otherwise global env
+  let googleClientId     = process.env.GOOGLE_CLIENT_ID!;
+  let googleClientSecret = process.env.GOOGLE_CLIENT_SECRET!;
+
+  const byok = app.oauthProviders[0];
+  if (pkce.byok && byok?.providerClientId && byok?.providerSecret) {
+    try {
+      googleClientId     = byok.providerClientId;
+      googleClientSecret = decryptSecret(byok.providerSecret);
+    } catch {
+      // Fall back to global credentials if decryption fails
+    }
+  }
+
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       code,
-      client_id:     process.env.GOOGLE_CLIENT_ID!,
-      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      client_id:     googleClientId,
+      client_secret: googleClientSecret,
       redirect_uri:  `${process.env.NEXT_PUBLIC_APP_URL}/api/v1/oauth/google/callback`,
       grant_type:    'authorization_code',
     }),
@@ -56,7 +78,6 @@ export async function GET(req: NextRequest) {
   }
   const tokenData = await tokenRes.json() as { access_token: string };
 
-  // Fetch Google user info
   const userInfoRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
     headers: { Authorization: `Bearer ${tokenData.access_token}` },
   });
@@ -65,23 +86,20 @@ export async function GET(req: NextRequest) {
 
   if (!googleUser.id || !googleUser.email) return errorPage('Google did not return required user info.');
 
-  // Find or create user
   let user = await prisma.user.findFirst({
     where: { appId: app.id, googleId: googleUser.id },
   });
 
   if (!user) {
-    // Try to find by email and link
     const byEmail = await prisma.user.findUnique({
       where: { appId_email: { appId: app.id, email: googleUser.email.toLowerCase() } },
     });
     if (byEmail) {
       user = await prisma.user.update({
         where: { id: byEmail.id },
-        data: { googleId: googleUser.id },
+        data:  { googleId: googleUser.id },
       });
     } else {
-      // Create new user (no password — Google-only account)
       user = await prisma.user.create({
         data: {
           appId:         app.id,
@@ -94,11 +112,11 @@ export async function GET(req: NextRequest) {
         },
       });
       await auditRepo.create({
-        appId:  app.id,
-        userId: user.id,
-        action: 'register',
+        appId:    app.id,
+        userId:   user.id,
+        action:   'register',
         resource: 'auth',
-        meta: { provider: 'google' },
+        meta:     { provider: 'google' },
       });
     }
   }
@@ -106,14 +124,13 @@ export async function GET(req: NextRequest) {
   if (!user.isActive) return errorPage('This account has been disabled.');
 
   await auditRepo.create({
-    appId:  app.id,
-    userId: user.id,
-    action: 'login',
+    appId:    app.id,
+    userId:   user.id,
+    action:   'login',
     resource: 'auth',
-    meta: { provider: 'google' },
+    meta:     { provider: 'google' },
   });
 
-  // Create AuthCode and redirect to app
   const codeRaw  = crypto.randomBytes(32).toString('hex');
   const codeHash = hashCode(codeRaw);
 
