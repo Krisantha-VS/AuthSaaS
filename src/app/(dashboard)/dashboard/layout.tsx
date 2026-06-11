@@ -13,6 +13,7 @@ const PUBLIC = [
   '/dashboard/register',
   '/dashboard/forgot-password',
   '/dashboard/reset-password',
+  '/dashboard/google-session',
 ];
 
 function Guard({ children }: { children: React.ReactNode }) {

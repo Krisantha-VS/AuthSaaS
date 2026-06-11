@@ -142,6 +142,11 @@ export async function POST(req: NextRequest) {
     return err('Account is disabled', 'ACCOUNT_DISABLED', 403);
   }
 
+  if (!user.passwordHash) {
+    await recordFailedAttempt(lockoutKey);
+    return err('This account uses Google sign-in. Please use "Continue with Google".', 'INVALID_CREDENTIALS', 401);
+  }
+
   const passwordMatch = await bcrypt.compare(password, user.passwordHash);
   if (!passwordMatch) {
     await recordFailedAttempt(lockoutKey);

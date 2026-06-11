@@ -191,3 +191,34 @@ export async function toggleApp(appId: string, tenantId: string, isActive: boole
 
   return result;
 }
+
+// ─── Google OAuth ─────────────────────────────────────────
+
+export async function loginOrCreateTenantWithGoogle(params: {
+  googleId: string;
+  email: string;
+  name: string;
+  ipAddress?: string;
+}) {
+  // Find by googleId first, then by email
+  let tenant = await (tenantRepo as any).findByGoogleId?.(params.googleId)
+    ?? await tenantRepo.findByEmail(params.email);
+
+  if (tenant) {
+    // Link googleId if not already set
+    if (!tenant.googleId) {
+      await tenantRepo.update(tenant.id, { googleId: params.googleId } as any);
+    }
+  } else {
+    // Create Google-only tenant (no password)
+    tenant = await tenantRepo.create({
+      name: params.name || params.email.split('@')[0],
+      email: params.email,
+      password: '',           // will be stored as empty — no bcrypt hash
+    });
+    await tenantRepo.update(tenant.id, { googleId: params.googleId, verified: true } as any);
+  }
+
+  const tokens = issueTenantTokens(tenant.id, tenant.email);
+  return { tenant: { id: tenant.id, name: tenant.name, email: tenant.email }, tokens };
+}
