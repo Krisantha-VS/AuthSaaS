@@ -24,24 +24,38 @@ model Tenant {
 }
 
 model TenantApp {
-  id             String         @id @default(cuid())
+  id             String             @id @default(cuid())
   tenantId       String
   name           String
   description    String?
-  clientId       String         @unique @default(cuid())
+  clientId       String             @unique @default(cuid())
   secretHash     String
-  allowedOrigins Json    @default("[]")
-  isActive       Boolean        @default(true)
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  allowedOrigins Json               @default("[]")
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   auditLogs      AuditLog[]
+  oauthProviders AppOAuthProvider[]
   refreshTokens  RefreshToken[]
   roles          Role[]
-  tenant         Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   users          User[]
   webhooks       Webhook[]
 
   @@map("tenant_apps")
+}
+
+model AppOAuthProvider {
+  id        String    @id @default(cuid())
+  appId     String
+  provider  String
+  enabled   Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  app       TenantApp @relation(fields: [appId], references: [id], onDelete: Cascade)
+
+  @@unique([appId, provider])
+  @@map("app_oauth_providers")
 }
 
 model User {

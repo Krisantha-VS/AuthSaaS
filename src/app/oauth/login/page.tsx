@@ -59,6 +59,10 @@ export default async function OAuthLoginPage({ searchParams }: Props) {
     // Non-fatal — display generic name
   }
 
+  const providersRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/v1/oauth/providers?client_id=${client_id}`).catch(() => null);
+  const providersData = providersRes?.ok ? await providersRes.json() : null;
+  const enabledProviders: string[] = providersData?.data?.providers ?? [];
+
   return (
     <OAuthLoginForm
       clientId={client_id}
@@ -67,6 +71,7 @@ export default async function OAuthLoginPage({ searchParams }: Props) {
       codeChallengeMethod={code_challenge_method ?? 'S256'}
       state={state}
       appName={appName}
+      enabledProviders={enabledProviders}
     />
   );
 }

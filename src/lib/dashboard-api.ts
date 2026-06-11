@@ -106,6 +106,24 @@ export function rotateSecret(token: string, appId: string) {
   }, token);
 }
 
+// ── OAuth Providers ───────────────────────────────────────────────────────────
+
+export interface OAuthProviderSetting {
+  provider: string;
+  enabled:  boolean;
+}
+
+export function getOAuthProviders(token: string, appId: string) {
+  return request<OAuthProviderSetting[]>(`/apps/${appId}/oauth-providers`, {}, token);
+}
+
+export function setOAuthProvider(token: string, appId: string, provider: string, enabled: boolean) {
+  return request<OAuthProviderSetting>(`/apps/${appId}/oauth-providers`, {
+    method: 'PATCH',
+    body: JSON.stringify({ provider, enabled }),
+  }, token);
+}
+
 // ── Stats & Audit ─────────────────────────────────────────────────────────────
 
 export interface DashboardStats {
