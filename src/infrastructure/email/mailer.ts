@@ -1,15 +1,17 @@
-const ROYALDA_MAIL_URL = 'https://mail.royalda.com/api/v1/send'
-const ROYALDA_MAIL_KEY = process.env.ROYALDA_MAIL_API_KEY!
-const FROM = 'noreply@royalda.com'
+import nodemailer from 'nodemailer';
+
+const transporter = nodemailer.createTransport({
+  host:   process.env.EMAIL_HOST!,
+  port:   Number(process.env.EMAIL_PORT ?? 587),
+  secure: Number(process.env.EMAIL_PORT) === 465,
+  auth: {
+    user: process.env.EMAIL_USER!,
+    pass: process.env.EMAIL_PASS!,
+  },
+});
+
+const FROM = process.env.EMAIL_FROM ?? 'noreply@royalda.com';
 
 export async function sendMail(to: string, subject: string, html: string): Promise<void> {
-  const res = await fetch(ROYALDA_MAIL_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${ROYALDA_MAIL_KEY}` },
-    body: JSON.stringify({ to, subject, html, from: FROM }),
-  })
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}))
-    throw new Error(`Royalda Mail error: ${err?.error?.message ?? res.status}`)
-  }
+  await transporter.sendMail({ from: FROM, to, subject, html });
 }
