@@ -1,0 +1,13 @@
+steps:
+  - name: build-and-deploy
+    image: docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/auth-saas:/opt/auth-saas
+    commands:
+      - docker build -t auth-saas:latest .
+      - docker compose -f /opt/auth-saas/docker-compose.yml up -d --force-recreate
+
+when:
+  branch: master
+  event: push
